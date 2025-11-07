@@ -51,11 +51,38 @@ RUN set -x \
     && (addgroup -g 82 -S www-data 2>/dev/null || true) \
     && (adduser -u 82 -D -S -G www-data www-data 2>/dev/null || true)
 
-# Set permissions
+# Create entrypoint script
+RUN echo '#!/bin/bash' > /entrypoint.sh \
+    && echo 'set -e' >> /entrypoint.sh \
+    && echo '' >> /entrypoint.sh \
+    && echo '# Check PHP extensions' >> /entrypoint.sh \
+    && echo 'php -m | grep -i pdo' >> /entrypoint.sh \
+    && echo 'php -m | grep -i sqlite' >> /entrypoint.sh \
+    && echo '' >> /entrypoint.sh \
+    && echo '# Create SQLite database if not exists' >> /entrypoint.sh \
+    && echo 'if [ ! -f database/database.sqlite ]; then' >> /entrypoint.sh \
+    && echo '    touch database/database.sqlite' >> /entrypoint.sh \
+    && echo '    echo "Created SQLite database file"' >> /entrypoint.sh \
+    && echo 'fi' >> /entrypoint.sh \
+    && echo '' >> /entrypoint.sh \
+    && echo '# Set permissions' >> /entrypoint.sh \
+    && echo 'chown -R www-data:www-data /var/www/html' >> /entrypoint.sh \
+    && echo 'chmod -R 755 /var/www/html/storage' >> /entrypoint.sh \
+    && echo 'chmod -R 755 /var/www/html/bootstrap/cache' >> /entrypoint.sh \
+    && echo 'chmod 664 database/database.sqlite 2>/dev/null || true' >> /entrypoint.sh \
+    && echo '' >> /entrypoint.sh \
+    && echo '# Run migrations' >> /entrypoint.sh \
+    && echo 'php artisan migrate --force' >> /entrypoint.sh \
+    && echo '' >> /entrypoint.sh \
+    && echo '# Start server' >> /entrypoint.sh \
+    && echo 'exec php artisan serve --host=0.0.0.0 --port=8000' >> /entrypoint.sh \
+    && chmod +x /entrypoint.sh
+
+# Set permissions for build-time files
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
 EXPOSE 8000
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+ENTRYPOINT ["/entrypoint.sh"]
