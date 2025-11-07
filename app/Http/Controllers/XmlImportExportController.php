@@ -32,7 +32,7 @@ class XmlImportExportController extends Controller
     {
         $request->validate([
             'project_id' => 'required|exists:projects,id',
-            'xml_file' => 'required|file|mimes:xml',
+            'xml_file' => 'required|file|mimetypes:text/xml,application/xml',
             'route_file_name' => 'required|string|max:128',
         ]);
 
@@ -136,7 +136,6 @@ class XmlImportExportController extends Controller
                     $service = Service::firstOrCreate(
                         ['name' => $serviceName],
                         [
-                            'type' => 'REQ',
                             'description' => 'Auto-created from XML import',
                         ]
                     );

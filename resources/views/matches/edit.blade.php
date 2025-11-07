@@ -34,19 +34,21 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="type" class="form-label">Type</label>
+                        <label for="type" class="form-label">Message Type</label>
                         <select class="form-select @error('type') is-invalid @enderror"
                                 id="type"
                                 name="type">
-                            <option value="">-- Select Type (Optional) --</option>
-                            <option value="AND" {{ old('type', $match->type) == 'AND' ? 'selected' : '' }}>AND</option>
-                            <option value="OR" {{ old('type', $match->type) == 'OR' ? 'selected' : '' }}>OR</option>
-                            <option value="NOT" {{ old('type', $match->type) == 'NOT' ? 'selected' : '' }}>NOT</option>
+                            <option value="">-- Select Message Type (Optional) --</option>
+                            <option value="REQ" {{ old('type', $match->type) == 'REQ' ? 'selected' : '' }}>REQ - Request</option>
+                            <option value="NOT" {{ old('type', $match->type) == 'NOT' ? 'selected' : '' }}>NOT - Notification</option>
+                            <option value="SAME" {{ old('type', $match->type) == 'SAME' ? 'selected' : '' }}>SAME - Same</option>
+                            <option value="PUB" {{ old('type', $match->type) == 'PUB' ? 'selected' : '' }}>PUB - Public</option>
+                            <option value="END" {{ old('type', $match->type) == 'END' ? 'selected' : '' }}>END - Endpoint</option>
                         </select>
                         @error('type')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <div class="form-text">How multiple conditions should be evaluated</div>
+                        <div class="form-text">Message type for this match condition</div>
                     </div>
 
                     <div class="mb-3">

@@ -21,7 +21,6 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Type</th>
                                 <th>Description</th>
                                 <th>Routes</th>
                                 <th>Created</th>
@@ -33,23 +32,6 @@
                             <tr>
                                 <td>
                                     <strong>{{ $service->name }}</strong>
-                                </td>
-                                <td>
-                                    @if($service->type)
-                                        @php
-                                            $badgeColors = [
-                                                'REQ' => 'bg-primary',
-                                                'NOT' => 'bg-warning',
-                                                'SAME' => 'bg-info',
-                                                'PUB' => 'bg-success',
-                                                'END' => 'bg-danger'
-                                            ];
-                                            $color = $badgeColors[$service->type] ?? 'bg-secondary';
-                                        @endphp
-                                        <span class="badge {{ $color }} badge-type">{{ $service->type }}</span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
                                 </td>
                                 <td>
                                     <small class="text-muted">{{ Str::limit($service->description, 60) }}</small>

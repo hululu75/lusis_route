@@ -32,29 +32,6 @@
 
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <strong>Type:</strong>
-                    </div>
-                    <div class="col-md-9">
-                        @if($service->type)
-                            @php
-                                $badgeColors = [
-                                    'REQ' => 'bg-primary',
-                                    'NOT' => 'bg-warning',
-                                    'SAME' => 'bg-info',
-                                    'PUB' => 'bg-success',
-                                    'END' => 'bg-danger'
-                                ];
-                                $color = $badgeColors[$service->type] ?? 'bg-secondary';
-                            @endphp
-                            <span class="badge {{ $color }} badge-type">{{ $service->type }}</span>
-                        @else
-                            <span class="text-muted">Not specified</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-3">
                         <strong>Description:</strong>
                     </div>
                     <div class="col-md-9">

@@ -31,7 +31,6 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:64|unique:services',
-            'type' => 'required|in:REQ,NOT,SAME,PUB,END',
             'description' => 'nullable|string',
         ]);
 
@@ -65,7 +64,6 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:64|unique:services,name,' . $service->id,
-            'type' => 'required|in:REQ,NOT,SAME,PUB,END',
             'description' => 'nullable|string',
         ]);
 

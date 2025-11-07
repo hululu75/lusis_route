@@ -31,23 +31,7 @@
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="type" class="form-label">Type</label>
-                        <select class="form-select @error('type') is-invalid @enderror"
-                                id="type"
-                                name="type">
-                            <option value="">-- Select Type --</option>
-                            <option value="REQ" {{ old('type', $service->type) == 'REQ' ? 'selected' : '' }}>REQ - Request</option>
-                            <option value="NOT" {{ old('type', $service->type) == 'NOT' ? 'selected' : '' }}>NOT - Notification</option>
-                            <option value="SAME" {{ old('type', $service->type) == 'SAME' ? 'selected' : '' }}>SAME - Same</option>
-                            <option value="PUB" {{ old('type', $service->type) == 'PUB' ? 'selected' : '' }}>PUB - Public</option>
-                            <option value="END" {{ old('type', $service->type) == 'END' ? 'selected' : '' }}>END - Endpoint</option>
-                        </select>
-                        @error('type')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <div class="form-text">Unique service name (e.g., WEBTGINAPP, R_ROUTER)</div>
                     </div>
 
                     <div class="mb-3">
