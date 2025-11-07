@@ -28,6 +28,7 @@ Route::resource('services', ServiceController::class);
 
 // Route Files
 Route::resource('route-files', RouteFileController::class);
+Route::get('/route-files/{routeFile}/wizard', [RouteFileController::class, 'wizard'])->name('route-files.wizard');
 
 // Matches
 Route::resource('matches', RouteMatchController::class);

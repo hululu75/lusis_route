@@ -26,7 +26,8 @@
                                 required>
                             <option value="">-- Select Project --</option>
                             @foreach($projects as $project)
-                                <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                <option value="{{ $project->id }}"
+                                    {{ (old('project_id') ? old('project_id') == $project->id : $currentProjectId == $project->id) ? 'selected' : '' }}>
                                     {{ $project->name }}
                                 </option>
                             @endforeach
@@ -34,6 +35,11 @@
                         @error('project_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                        @if($currentProjectId)
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i> Current project is pre-selected
+                        </div>
+                        @endif
                     </div>
 
                     <div class="mb-3">

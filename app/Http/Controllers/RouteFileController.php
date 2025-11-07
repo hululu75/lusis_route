@@ -23,7 +23,8 @@ class RouteFileController extends Controller
     public function create()
     {
         $projects = Project::latest()->get();
-        return view('route_files.create', compact('projects'));
+        $currentProjectId = \App\Helpers\ProjectHelper::getCurrentProjectId();
+        return view('route_files.create', compact('projects', 'currentProjectId'));
     }
 
     /**
@@ -38,10 +39,11 @@ class RouteFileController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        RouteFile::create($validated);
+        $routeFile = RouteFile::create($validated);
 
-        return redirect()->route('route_files.index')
-            ->with('success', 'Route file created successfully!');
+        // Redirect to setup wizard instead of index
+        return redirect()->route('route-files.wizard', $routeFile->id)
+            ->with('success', 'Route file created successfully! Let\'s set up your routes.');
     }
 
     /**
@@ -78,6 +80,25 @@ class RouteFileController extends Controller
 
         return redirect()->route('route_files.index')
             ->with('success', 'Route file updated successfully!');
+    }
+
+    /**
+     * Show the setup wizard for a new route file
+     */
+    public function wizard(RouteFile $routeFile)
+    {
+        $routeFile->load(['project', 'routes']);
+
+        // Get counts of existing entities for this project
+        $stats = [
+            'services' => \App\Models\Service::where('project_id', $routeFile->project_id)->count(),
+            'matches' => \App\Models\RouteMatch::where('project_id', $routeFile->project_id)->count(),
+            'deltas' => \App\Models\Delta::where('project_id', $routeFile->project_id)->count(),
+            'rules' => \App\Models\Rule::where('project_id', $routeFile->project_id)->count(),
+            'routes' => $routeFile->routes->count(),
+        ];
+
+        return view('route_files.wizard', compact('routeFile', 'stats'));
     }
 
     /**
