@@ -10,6 +10,7 @@ class Route extends Model
     protected $fillable = [
         'routefile_id',
         'from_service_id',
+        'to_service_id',
         'match_id',
         'rule_id',
         'chainclass',
@@ -25,6 +26,16 @@ class Route extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class, 'from_service_id');
+    }
+
+    public function fromService(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'from_service_id');
+    }
+
+    public function toService(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'to_service_id');
     }
 
     public function match(): BelongsTo

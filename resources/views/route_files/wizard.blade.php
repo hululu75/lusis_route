@@ -227,7 +227,7 @@
                             <input type="hidden" name="routefile_id" value="{{ $routeFile->id }}">
 
                             <div class="row">
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="from_service_id" class="form-label">
                                         From Service (发送方) <span class="text-danger">*</span>
                                     </label>
@@ -245,7 +245,24 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
+                                    <label for="to_service_id" class="form-label">
+                                        To Service (接收方)
+                                    </label>
+                                    <select class="form-select @error('to_service_id') is-invalid @enderror"
+                                            id="to_service_id"
+                                            name="to_service_id">
+                                        <option value="">-- Select Service --</option>
+                                        @foreach($services as $service)
+                                            <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('to_service_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-3 mb-3">
                                     <label for="match_id" class="form-label">
                                         Match Condition (条件)
                                     </label>
@@ -265,7 +282,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="rule_id" class="form-label">
                                         Rule (规则)
                                     </label>
