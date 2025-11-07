@@ -1,37 +1,37 @@
 FROM alpine:3.20
 
-# Install PHP 8.4 and all extensions via apk - NO COMPILATION!
+# Install PHP 8.3 and all extensions via apk - NO COMPILATION!
+# Note: Alpine 3.20 stable has PHP 8.3, not 8.4 yet
 RUN apk add --no-cache \
-    php84 \
-    php84-cli \
-    php84-phar \
-    php84-openssl \
-    php84-mbstring \
-    php84-tokenizer \
-    php84-fileinfo \
-    php84-json \
-    php84-curl \
-    php84-xml \
-    php84-xmlwriter \
-    php84-simplexml \
-    php84-dom \
-    php84-pdo \
-    php84-pdo_sqlite \
-    php84-pdo_mysql \
-    php84-pdo_pgsql \
-    php84-sqlite3 \
-    php84-gd \
-    php84-bcmath \
-    php84-zip \
-    php84-session \
-    php84-ctype \
-    php84-pcntl \
+    php83 \
+    php83-cli \
+    php83-phar \
+    php83-openssl \
+    php83-mbstring \
+    php83-tokenizer \
+    php83-fileinfo \
+    php83-curl \
+    php83-xml \
+    php83-xmlwriter \
+    php83-simplexml \
+    php83-dom \
+    php83-pdo \
+    php83-pdo_sqlite \
+    php83-pdo_mysql \
+    php83-pdo_pgsql \
+    php83-sqlite3 \
+    php83-gd \
+    php83-bcmath \
+    php83-zip \
+    php83-session \
+    php83-ctype \
+    php83-pcntl \
     bash \
     git \
     curl \
     unzip \
     sqlite \
-    && ln -sf /usr/bin/php84 /usr/bin/php
+    && ln -sf /usr/bin/php83 /usr/bin/php
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
