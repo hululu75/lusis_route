@@ -178,12 +178,12 @@
 
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {{ request()->is('xml/import') ? 'active' : '' }}" href="{{ route('xml.import') }}">
                                 <i class="bi bi-download"></i> Import XML
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {{ request()->is('xml/export') ? 'active' : '' }}" href="{{ route('xml.export') }}">
                                 <i class="bi bi-upload"></i> Export XML
                             </a>
                         </li>
