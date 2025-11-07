@@ -87,7 +87,7 @@ class RouteFileController extends Controller
      */
     public function wizard(RouteFile $routeFile)
     {
-        $routeFile->load(['project', 'routes']);
+        $routeFile->load(['project', 'routes.service', 'routes.match', 'routes.rule']);
 
         // Get counts of existing entities for this project
         $stats = [
@@ -98,7 +98,12 @@ class RouteFileController extends Controller
             'routes' => $routeFile->routes->count(),
         ];
 
-        return view('route_files.wizard', compact('routeFile', 'stats'));
+        // Get available options for route creation
+        $services = \App\Models\Service::where('project_id', $routeFile->project_id)->latest()->get();
+        $matches = \App\Models\RouteMatch::where('project_id', $routeFile->project_id)->latest()->get();
+        $rules = \App\Models\Rule::where('project_id', $routeFile->project_id)->latest()->get();
+
+        return view('route_files.wizard', compact('routeFile', 'stats', 'services', 'matches', 'rules'));
     }
 
     /**

@@ -73,7 +73,14 @@ class RouteController extends Controller
             'priority' => 'nullable|integer',
         ]);
 
-        Route::create($validated);
+        $route = Route::create($validated);
+
+        // Check if request came from wizard (by checking referer)
+        $referer = $request->headers->get('referer');
+        if ($referer && str_contains($referer, '/wizard')) {
+            return redirect()->route('route-files.wizard', $validated['routefile_id'])
+                ->with('success', 'Route created successfully!');
+        }
 
         return redirect()->route('routes.index')
             ->with('success', 'Route created successfully!');
