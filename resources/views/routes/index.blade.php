@@ -54,7 +54,7 @@
                                 </td>
                                 <td>
                                     @if($route->service)
-                                        <a href="{{ route('services.show', $route->service_id) }}" class="text-decoration-none">
+                                        <a href="{{ route('services.show', $route->from_service_id) }}" class="text-decoration-none">
                                             {{ $route->service->name }}
                                         </a>
                                     @else

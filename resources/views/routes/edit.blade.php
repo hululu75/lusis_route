@@ -39,19 +39,19 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="service_id" class="form-label">Service <span class="text-danger">*</span></label>
-                            <select class="form-select @error('service_id') is-invalid @enderror"
-                                    id="service_id"
-                                    name="service_id"
+                            <label for="from_service_id" class="form-label">From Service <span class="text-danger">*</span></label>
+                            <select class="form-select @error('from_service_id') is-invalid @enderror"
+                                    id="from_service_id"
+                                    name="from_service_id"
                                     required>
                                 <option value="">-- Select Service --</option>
                                 @foreach($services as $service)
-                                    <option value="{{ $service->id }}" {{ old('service_id', $route->service_id) == $service->id ? 'selected' : '' }}>
+                                    <option value="{{ $service->id }}" {{ old('from_service_id', $route->from_service_id) == $service->id ? 'selected' : '' }}>
                                         {{ $service->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('service_id')
+                            @error('from_service_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
