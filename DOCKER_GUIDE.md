@@ -12,19 +12,65 @@
 
 ### 方法1：使用 docker-compose（推荐）
 
+#### 快速启动（SQLite模式）
+
 ```bash
 # 1. 克隆或复制项目到支持Docker的环境
 git clone <repository-url>
 cd lusis_route
 
-# 2. 一键启动
-docker-compose up -d
+# 2. 准备环境配置
+cp .env.docker.example .env
+# 编辑 .env 设置 APP_KEY
 
-# 3. 查看日志
-docker-compose logs -f
+# 3. 一键启动（仅应用，使用SQLite）
+docker compose up -d
 
 # 4. 访问应用
 浏览器打开: http://localhost:8000
+```
+
+#### 使用PostgreSQL数据库
+
+```bash
+# 1. 准备环境配置
+cp .env.docker.example .env
+# 编辑 .env，取消注释PostgreSQL配置
+
+# 2. 启动应用和PostgreSQL
+docker compose --profile postgres up -d
+
+# 3. 查看日志
+docker compose logs -f
+
+# 4. 访问应用
+浏览器打开: http://localhost:8000
+
+# 5. 使用pgAdmin管理数据库（可选）
+docker compose --profile pgadmin up -d
+浏览器打开: http://localhost:5050
+```
+
+#### 使用MySQL数据库
+
+```bash
+# 1. 编辑 .env，启用MySQL配置
+# 2. 启动应用和MySQL
+docker compose --profile mysql up -d
+
+# 3. 访问应用
+浏览器打开: http://localhost:8000
+```
+
+#### 完整部署（所有服务）
+
+```bash
+# 启动所有服务：应用+PostgreSQL+Redis+pgAdmin
+docker compose --profile full up -d
+
+# 访问：
+# - 应用: http://localhost:8000
+# - pgAdmin: http://localhost:5050
 ```
 
 ### 方法2：使用 Docker 命令
@@ -46,31 +92,136 @@ docker run -d \
 
 ## 📋 Docker配置详情
 
-### docker-compose.yml
+### docker-compose.yml 架构
+
+新的docker-compose.yml提供了灵活的多服务架构：
+
+#### 核心服务
+
+**app** - Laravel应用容器
+- 端口: 8000
+- 自动运行迁移
+- 健康检查
+- 支持SQLite/PostgreSQL/MySQL
+
+**postgres** (可选) - PostgreSQL 16数据库
+- 端口: 5432
+- 数据持久化
+- 健康检查
+- Profile: `postgres`, `full`
+
+**mysql** (可选) - MySQL 8.0数据库
+- 端口: 3306
+- 数据持久化
+- 健康检查
+- Profile: `mysql`
+
+**redis** (可选) - Redis缓存
+- 端口: 6379
+- 数据持久化
+- Profile: `redis`, `full`
+
+**pgadmin** (可选) - PostgreSQL管理工具
+- 端口: 5050
+- Web界面
+- Profile: `pgadmin`, `full`
+
+### Docker Profiles 使用
+
+#### Profile 说明
+
+Docker Compose Profiles允许选择性启动服务：
+
+| Profile | 启动的服务 | 用途 |
+|---------|----------|------|
+| (默认) | app | 仅应用，使用SQLite |
+| `postgres` | app + postgres | 应用 + PostgreSQL数据库 |
+| `mysql` | app + mysql | 应用 + MySQL数据库 |
+| `redis` | app + redis | 应用 + Redis缓存 |
+| `pgadmin` | app + postgres + pgadmin | PostgreSQL + 管理工具 |
+| `full` | 所有服务 | 完整技术栈 |
+
+#### 启动示例
+
+```bash
+# 仅应用（SQLite）
+docker compose up -d
+
+# 应用 + PostgreSQL
+docker compose --profile postgres up -d
+
+# 应用 + MySQL
+docker compose --profile mysql up -d
+
+# 应用 + PostgreSQL + pgAdmin
+docker compose --profile postgres --profile pgadmin up -d
+
+# 所有服务
+docker compose --profile full up -d
+
+# 停止所有服务
+docker compose --profile full down
+```
+
+### 环境变量配置
+
+docker-compose.yml支持以下环境变量：
+
+```bash
+# 应用端口
+APP_PORT=8000
+
+# 数据库配置
+DB_CONNECTION=pgsql        # sqlite, pgsql, mysql
+DB_HOST=postgres           # postgres, mysql, 或自定义主机
+DB_PORT=5432               # 5432(PostgreSQL), 3306(MySQL)
+DB_DATABASE=lusis_route
+DB_USERNAME=postgres
+DB_PASSWORD=secret
+
+# MySQL特定
+DB_ROOT_PASSWORD=rootsecret
+
+# Redis
+REDIS_PORT=6379
+
+# pgAdmin
+PGADMIN_PORT=5050
+PGADMIN_EMAIL=admin@lusis.local
+PGADMIN_PASSWORD=admin
+```
+
+### 数据持久化
+
+所有数据库数据通过Docker volumes持久化：
 
 ```yaml
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./database:/var/www/html/database
-      - ./storage:/var/www/html/storage
-    environment:
-      - DB_CONNECTION=sqlite
-      - DB_DATABASE=/var/www/html/database/database.sqlite
-    command: >
-      sh -c "
-        chmod -R 777 storage bootstrap/cache &&
-        touch database/database.sqlite &&
-        chmod 666 database/database.sqlite &&
-        php artisan migrate --force &&
-        php artisan serve --host=0.0.0.0
-      "
+volumes:
+  postgres-data:    # PostgreSQL数据
+  mysql-data:       # MySQL数据
+  redis-data:       # Redis数据
+  pgadmin-data:     # pgAdmin配置
 ```
+
+### 健康检查
+
+所有服务都配置了健康检查：
+
+- **app**: HTTP 200检查 (每30秒)
+- **postgres**: pg_isready检查 (每10秒)
+- **mysql**: mysqladmin ping检查 (每10秒)
+- **redis**: redis-cli ping检查 (每10秒)
+
+### 启动顺序控制
+
+```yaml
+app:
+  depends_on:
+    postgres:
+      condition: service_healthy
+```
+
+应用会等待数据库健康检查通过后再启动。
 
 ### Dockerfile
 
