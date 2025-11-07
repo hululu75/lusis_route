@@ -66,12 +66,12 @@
                 </div>
                 @endif
                 <div class="d-grid gap-2">
-                    <a href="{{ route('services.create') }}" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createServiceModal">
                         <i class="bi bi-plus-circle"></i> Create Service
-                    </a>
-                    <a href="{{ route('services.index') }}" class="btn btn-outline-secondary">
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewServicesModal">
                         <i class="bi bi-list"></i> View All Services
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -101,12 +101,12 @@
                 </div>
                 @endif
                 <div class="d-grid gap-2">
-                    <a href="{{ route('matches.create') }}" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMatchModal">
                         <i class="bi bi-plus-circle"></i> Create Match
-                    </a>
-                    <a href="{{ route('matches.index') }}" class="btn btn-outline-secondary">
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewMatchesModal">
                         <i class="bi bi-list"></i> View All Matches
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -141,12 +141,12 @@
                 </div>
                 @endif
                 <div class="d-grid gap-2">
-                    <a href="{{ route('deltas.create') }}" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDeltaModal">
                         <i class="bi bi-plus-circle"></i> Create Delta
-                    </a>
-                    <a href="{{ route('deltas.index') }}" class="btn btn-outline-secondary">
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewDeltasModal">
                         <i class="bi bi-list"></i> View All Deltas
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -180,12 +180,12 @@
                 </div>
                 @endif
                 <div class="d-grid gap-2">
-                    <a href="{{ route('rules.create') }}" class="btn btn-primary" {{ $stats['services'] == 0 ? 'onclick="alert(\'Please create services first\'); return false;"' : '' }}>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRuleModal" {{ $stats['services'] == 0 ? 'disabled' : '' }}>
                         <i class="bi bi-plus-circle"></i> Create Rule
-                    </a>
-                    <a href="{{ route('rules.index') }}" class="btn btn-outline-secondary">
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewRulesModal">
                         <i class="bi bi-list"></i> View All Rules
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -513,6 +513,127 @@
         </div>
     </div>
 </div>
+
+<!-- Modals -->
+<!-- Create Service Modal -->
+<div class="modal fade" id="createServiceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('services.create') }}" style="width:100%; height:500px; border:none;" id="createServiceFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Services Modal -->
+<div class="modal fade" id="viewServicesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-list"></i> All Services</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('services.index') }}" style="width:100%; height:600px; border:none;" id="viewServicesFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Match Modal -->
+<div class="modal fade" id="createMatchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create Match</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('matches.create') }}" style="width:100%; height:500px; border:none;" id="createMatchFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Matches Modal -->
+<div class="modal fade" id="viewMatchesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-list"></i> All Matches</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('matches.index') }}" style="width:100%; height:600px; border:none;" id="viewMatchesFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Delta Modal -->
+<div class="modal fade" id="createDeltaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create Delta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('deltas.create') }}" style="width:100%; height:500px; border:none;" id="createDeltaFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Deltas Modal -->
+<div class="modal fade" id="viewDeltasModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-list"></i> All Deltas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('deltas.index') }}" style="width:100%; height:600px; border:none;" id="viewDeltasFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Rule Modal -->
+<div class="modal fade" id="createRuleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create Rule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('rules.create') }}" style="width:100%; height:500px; border:none;" id="createRuleFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Rules Modal -->
+<div class="modal fade" id="viewRulesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-list"></i> All Rules</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <iframe src="{{ route('rules.index') }}" style="width:100%; height:600px; border:none;" id="viewRulesFrame"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -533,5 +654,39 @@
 .border-success {
     border-width: 2px !important;
 }
+
+.modal-body iframe {
+    border-radius: 0.375rem;
+}
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// Reload page when modal is closed to refresh stats and dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen to all modal hide events
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Check if modal contains a create form (modals with "create" in their ID)
+            if (this.id.includes('create') || this.id.includes('view')) {
+                // Reload the page to refresh stats and dropdown options
+                location.reload();
+            }
+        });
+    });
+
+    // Reload iframe content when modal is shown (to get fresh content)
+    modals.forEach(function(modal) {
+        modal.addEventListener('shown.bs.modal', function() {
+            const iframe = this.querySelector('iframe');
+            if (iframe && iframe.src) {
+                // Reload iframe to get fresh content
+                iframe.src = iframe.src;
+            }
+        });
+    });
+});
+</script>
 @endpush
