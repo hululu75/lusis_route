@@ -49,11 +49,11 @@
 
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <strong>Service:</strong>
+                        <strong>From Service:</strong>
                     </div>
                     <div class="col-md-9">
                         @if($route->service)
-                            <a href="{{ route('services.show', $route->service_id) }}">
+                            <a href="{{ route('services.show', $route->from_service_id) }}">
                                 <i class="bi bi-gear"></i> {{ $route->service->name }}
                             </a>
                         @else
@@ -168,7 +168,7 @@
                     </a>
                     @endif
                     @if($route->service)
-                    <a href="{{ route('services.show', $route->service_id) }}" class="btn btn-outline-primary btn-sm">
+                    <a href="{{ route('services.show', $route->from_service_id) }}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-gear"></i> View Service
                     </a>
                     @endif
