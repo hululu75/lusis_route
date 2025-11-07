@@ -64,13 +64,20 @@ class XmlImportExportController extends Controller
                 foreach ($xml->deltas->delta as $deltaXml) {
                     $deltaName = (string)$deltaXml['name'];
 
-                    if (!Delta::where('name', $deltaName)->exists()) {
-                        Delta::create([
+                    // Use updateOrCreate with project_id
+                    $delta = Delta::updateOrCreate(
+                        [
                             'name' => $deltaName,
+                            'project_id' => $project->id
+                        ],
+                        [
                             'next' => isset($deltaXml['next']) ? (string)$deltaXml['next'] : null,
                             'definition' => $deltaXml->asXML(),
                             'description' => 'Imported from XML',
-                        ]);
+                        ]
+                    );
+
+                    if ($delta->wasRecentlyCreated) {
                         $stats['deltas']++;
                     }
                 }
@@ -81,25 +88,35 @@ class XmlImportExportController extends Controller
                 foreach ($xml->matches->match as $matchXml) {
                     $matchName = (string)$matchXml['name'];
 
-                    if (!RouteMatch::where('name', $matchName)->exists()) {
-                        $match = RouteMatch::create([
+                    // Use firstOrCreate with project_id
+                    $match = RouteMatch::firstOrCreate(
+                        [
                             'name' => $matchName,
+                            'project_id' => $project->id
+                        ],
+                        [
                             'type' => isset($matchXml['type']) ? (string)$matchXml['type'] : null,
                             'description' => 'Imported from XML',
-                        ]);
+                        ]
+                    );
 
-                        // Import conditions
-                        if (isset($matchXml->condition)) {
-                            foreach ($matchXml->condition as $conditionXml) {
-                                MatchCondition::create([
-                                    'match_id' => $match->id,
-                                    'field' => (string)$conditionXml['field'],
-                                    'operator' => (string)$conditionXml['operator'],
-                                    'value' => isset($conditionXml['value']) ? (string)$conditionXml['value'] : null,
-                                ]);
-                            }
-                        }
+                    if ($match->wasRecentlyCreated) {
                         $stats['matches']++;
+                    }
+
+                    // Always clear and re-import conditions to ensure they're up-to-date
+                    $match->conditions()->delete();
+
+                    // Import conditions
+                    if (isset($matchXml->condition)) {
+                        foreach ($matchXml->condition as $conditionXml) {
+                            MatchCondition::create([
+                                'match_id' => $match->id,
+                                'field' => (string)$conditionXml['field'],
+                                'operator' => (string)$conditionXml['operator'],
+                                'value' => isset($conditionXml['value']) ? (string)$conditionXml['value'] : null,
+                            ]);
+                        }
                     }
                 }
             }
@@ -108,19 +125,26 @@ class XmlImportExportController extends Controller
             if (isset($xml->rules->rule)) {
                 foreach ($xml->rules->rule as $ruleXml) {
                     $ruleName = (string)$ruleXml['name'];
+                    $deltaName = isset($ruleXml['delta']) ? (string)$ruleXml['delta'] : null;
+                    // Find delta within the same project
+                    $delta = $deltaName ? Delta::where('name', $deltaName)->where('project_id', $project->id)->first() : null;
 
-                    if (!Rule::where('name', $ruleName)->exists()) {
-                        $deltaName = isset($ruleXml['delta']) ? (string)$ruleXml['delta'] : null;
-                        $delta = $deltaName ? Delta::where('name', $deltaName)->first() : null;
-
-                        Rule::create([
+                    // Use updateOrCreate with project_id
+                    $rule = Rule::updateOrCreate(
+                        [
                             'name' => $ruleName,
+                            'project_id' => $project->id
+                        ],
+                        [
                             'class' => (string)$ruleXml['class'],
                             'type' => isset($ruleXml['type']) ? (string)$ruleXml['type'] : 'REQ',
                             'delta_id' => $delta ? $delta->id : null,
                             'on_failure' => isset($ruleXml['on_failure']) ? (string)$ruleXml['on_failure'] : null,
                             'description' => 'Imported from XML',
-                        ]);
+                        ]
+                    );
+
+                    if ($rule->wasRecentlyCreated) {
                         $stats['rules']++;
                     }
                 }
@@ -132,9 +156,12 @@ class XmlImportExportController extends Controller
                 foreach ($xml->routes->route as $routeXml) {
                     $serviceName = (string)$routeXml['class'];
 
-                    // Create or get service
+                    // Create or get service with project_id
                     $service = Service::firstOrCreate(
-                        ['name' => $serviceName],
+                        [
+                            'name' => $serviceName,
+                            'project_id' => $project->id
+                        ],
                         [
                             'description' => 'Auto-created from XML import',
                         ]
@@ -151,8 +178,9 @@ class XmlImportExportController extends Controller
                             $ruleName = isset($caseXml['rule']) ? (string)$caseXml['rule'] : null;
                             $chainclass = isset($caseXml['chainclass']) ? (string)$caseXml['chainclass'] : null;
 
-                            $match = $matchName ? RouteMatch::where('name', $matchName)->first() : null;
-                            $rule = $ruleName ? Rule::where('name', $ruleName)->first() : null;
+                            // Find match and rule within the same project
+                            $match = $matchName ? RouteMatch::where('name', $matchName)->where('project_id', $project->id)->first() : null;
+                            $rule = $ruleName ? Rule::where('name', $ruleName)->where('project_id', $project->id)->first() : null;
 
                             Route::create([
                                 'routefile_id' => $routeFile->id,

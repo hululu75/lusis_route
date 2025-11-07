@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RouteMatch extends Model
@@ -11,9 +12,15 @@ class RouteMatch extends Model
 
     protected $fillable = [
         'name',
+        'project_id',
         'type',
         'description',
     ];
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
 
     public function conditions(): HasMany
     {

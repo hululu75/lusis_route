@@ -10,6 +10,7 @@ class Rule extends Model
 {
     protected $fillable = [
         'name',
+        'project_id',
         'class',
         'type',
         'delta_id',
@@ -22,6 +23,11 @@ class Rule extends Model
         'delta_cond_ko',
         'description',
     ];
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
 
     public function delta(): BelongsTo
     {

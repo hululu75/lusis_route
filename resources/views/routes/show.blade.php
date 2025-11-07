@@ -56,9 +56,6 @@
                             <a href="{{ route('services.show', $route->service_id) }}">
                                 <i class="bi bi-gear"></i> {{ $route->service->name }}
                             </a>
-                            @if($route->service->type)
-                                <span class="badge bg-info badge-type ms-2">{{ $route->service->type }}</span>
-                            @endif
                         @else
                             <span class="text-muted">No service assigned</span>
                         @endif
