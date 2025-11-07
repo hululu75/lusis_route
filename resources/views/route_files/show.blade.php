@@ -99,60 +99,83 @@
                         $routesByService = $routeFile->routes->groupBy('from_service_id');
                     @endphp
 
-                    @foreach($routesByService as $serviceId => $routes)
-                        @php
-                            $service = $routes->first()->service;
-                        @endphp
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs" id="serviceTabs" role="tablist">
+                        @foreach($routesByService as $serviceId => $routes)
+                            @php
+                                $service = $routes->first()->service;
+                                $isFirst = $loop->first;
+                            @endphp
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {{ $isFirst ? 'active' : '' }}"
+                                        id="service-{{ $serviceId }}-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#service-{{ $serviceId }}"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="service-{{ $serviceId }}"
+                                        aria-selected="{{ $isFirst ? 'true' : 'false' }}">
+                                    <i class="bi bi-gear"></i> {{ $service->name ?? 'Unknown' }}
+                                    <span class="badge bg-secondary ms-1">{{ $routes->count() }}</span>
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
 
-                        <div class="mb-4">
-                            <h6 class="text-primary mb-3">
-                                <i class="bi bi-gear"></i>
-                                From Service: <strong>{{ $service->name ?? 'Unknown' }}</strong>
-                                <span class="badge bg-secondary ms-2">{{ $routes->count() }} routes</span>
-                            </h6>
-
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th width="50"><i class="bi bi-grip-vertical"></i></th>
-                                            <th>Priority</th>
-                                            <th>Match</th>
-                                            <th>Rule</th>
-                                            <th>Chain Class</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
-                                        @foreach($routes->sortBy('priority') as $route)
-                                        <tr class="sortable-row" data-route-id="{{ $route->id }}">
-                                            <td class="text-center">
-                                                <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
-                                            </td>
-                                            <td><span class="badge bg-secondary priority-badge">{{ $route->priority }}</span></td>
-                                            <td>{{ $route->match->name ?? '-' }}</td>
-                                            <td>{{ $route->rule->name ?? '-' }}</td>
-                                            <td>
-                                                @if($route->chainclass)
-                                                    <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('routes.show', $route->id) }}"
-                                                   class="btn btn-sm btn-outline-primary"
-                                                   title="View Route">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="serviceTabsContent">
+                        @foreach($routesByService as $serviceId => $routes)
+                            @php
+                                $service = $routes->first()->service;
+                                $isFirst = $loop->first;
+                            @endphp
+                            <div class="tab-pane fade {{ $isFirst ? 'show active' : '' }}"
+                                 id="service-{{ $serviceId }}"
+                                 role="tabpanel"
+                                 aria-labelledby="service-{{ $serviceId }}-tab">
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-sm table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="50"><i class="bi bi-grip-vertical"></i></th>
+                                                <th>Priority</th>
+                                                <th>Match</th>
+                                                <th>Rule</th>
+                                                <th>Chain Class</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
+                                            @foreach($routes->sortBy('priority') as $route)
+                                            <tr class="sortable-row" data-route-id="{{ $route->id }}">
+                                                <td class="text-center">
+                                                    <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
+                                                </td>
+                                                <td><span class="badge bg-secondary priority-badge">{{ $route->priority }}</span></td>
+                                                <td>{{ $route->match->name ?? '-' }}</td>
+                                                <td>{{ $route->rule->name ?? '-' }}</td>
+                                                <td>
+                                                    @if($route->chainclass)
+                                                        <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('routes.show', $route->id) }}"
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       title="View Route">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 @else
                     <div class="text-center py-4">
                         <i class="bi bi-signpost-split fs-2 text-muted d-block mb-2"></i>
