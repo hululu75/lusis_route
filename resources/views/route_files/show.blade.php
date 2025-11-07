@@ -138,7 +138,6 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th width="50"><i class="bi bi-grip-vertical"></i></th>
-                                                <th>Priority</th>
                                                 <th>Match</th>
                                                 <th>Rule</th>
                                                 <th>Chain Class</th>
@@ -151,7 +150,6 @@
                                                 <td class="text-center drag-handle">
                                                     <i class="bi bi-grip-vertical text-muted"></i>
                                                 </td>
-                                                <td><span class="badge bg-secondary priority-badge">{{ $route->priority }}</span></td>
                                                 <td>{{ $route->match->name ?? '-' }}</td>
                                                 <td>{{ $route->rule->name ?? '-' }}</td>
                                                 <td>
@@ -292,11 +290,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Collect route IDs in new order
                 rows.forEach((row, index) => {
                     routeIds.push(row.dataset.routeId);
-                    // Update priority badge display
-                    const badge = row.querySelector('.priority-badge');
-                    if (badge) {
-                        badge.textContent = index;
-                    }
                 });
 
                 console.log('New order:', routeIds);
