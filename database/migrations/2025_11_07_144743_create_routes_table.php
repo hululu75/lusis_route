@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('routes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('routefile_id')->constrained('route_files')->onDelete('cascade');
+            $table->foreignId('from_service_id')->constrained('services')->onDelete('restrict');
+            $table->foreignId('match_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('rule_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('chainclass', 128)->nullable();
+            $table->enum('type', ['REQ', 'NOT', 'SAME', 'PUB', 'END'])->nullable();
+            $table->integer('priority')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('routes');
+    }
+};
