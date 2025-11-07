@@ -11,9 +11,14 @@ use App\Http\Controllers\RuleController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\XmlImportExportController;
 use App\Http\Controllers\MatchConditionController;
+use App\Http\Controllers\ProjectSwitchController;
 
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Project Context Switching
+Route::post('/project/switch/{project}', [ProjectSwitchController::class, 'switch'])->name('project.switch');
+Route::post('/project/clear', [ProjectSwitchController::class, 'clear'])->name('project.clear');
 
 // Projects
 Route::resource('projects', ProjectController::class);

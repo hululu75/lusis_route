@@ -131,6 +131,48 @@
                         <small>Lusis Route Manager</small>
                     </div>
 
+                    @php
+                        $currentProject = \App\Helpers\ProjectHelper::getCurrentProject();
+                        $allProjects = \App\Models\Project::latest()->get();
+                    @endphp
+
+                    <!-- Project Switcher -->
+                    <div class="px-3 py-2" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-light dropdown-toggle w-100 text-start" type="button" id="projectSwitcher" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-folder-fill"></i>
+                                @if($currentProject)
+                                    {{ $currentProject->name }}
+                                @else
+                                    <span class="text-muted">All Projects</span>
+                                @endif
+                            </button>
+                            <ul class="dropdown-menu w-100" aria-labelledby="projectSwitcher">
+                                <li>
+                                    <form action="{{ route('project.clear') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-grid"></i> All Projects
+                                        </button>
+                                    </form>
+                                </li>
+                                @if($allProjects->count() > 0)
+                                    <li><hr class="dropdown-divider"></li>
+                                    @foreach($allProjects as $project)
+                                        <li>
+                                            <form action="{{ route('project.switch', $project->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item {{ $currentProject && $currentProject->id == $project->id ? 'active' : '' }}">
+                                                    <i class="bi bi-folder"></i> {{ $project->name }}
+                                                </button>
+                                            </form>
+                                        </li>
+                                    @endforeach
+                                @endif
+                            </ul>
+                        </div>
+                    </div>
+
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ route('home') }}">

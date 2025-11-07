@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RouteMatch;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
 class RouteMatchController extends Controller
@@ -12,7 +13,9 @@ class RouteMatchController extends Controller
      */
     public function index()
     {
-        $matches = RouteMatch::withCount(['conditions', 'routes'])->latest()->get();
+        $query = RouteMatch::withCount(['conditions', 'routes'])->latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $matches = $query->get();
         return view('matches.index', compact('matches'));
     }
 
@@ -21,6 +24,10 @@ class RouteMatchController extends Controller
      */
     public function create()
     {
+        if (!ProjectHelper::hasCurrentProject()) {
+            return redirect()->route('matches.index')
+                ->with('error', 'Please select a project first');
+        }
         return view('matches.create');
     }
 
@@ -34,6 +41,13 @@ class RouteMatchController extends Controller
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'description' => 'nullable|string',
         ]);
+
+        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
+
+        if (!$validated['project_id']) {
+            return redirect()->route('matches.index')
+                ->with('error', 'Please select a project first');
+        }
 
         RouteMatch::create($validated);
 

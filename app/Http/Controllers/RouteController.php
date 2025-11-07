@@ -7,6 +7,7 @@ use App\Models\RouteFile;
 use App\Models\Service;
 use App\Models\RouteMatch;
 use App\Models\Rule;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
 class RouteController extends Controller
@@ -16,9 +17,16 @@ class RouteController extends Controller
      */
     public function index()
     {
-        $routes = Route::with(['routeFile', 'service', 'match', 'rule'])
-            ->orderBy('priority')
-            ->get();
+        $query = Route::with(['routeFile', 'service', 'match', 'rule']);
+
+        // Filter by project through routeFile
+        if ($projectId = ProjectHelper::getCurrentProjectId()) {
+            $query->whereHas('routeFile', function($q) use ($projectId) {
+                $q->where('project_id', $projectId);
+            });
+        }
+
+        $routes = $query->orderBy('priority')->get();
         return view('routes.index', compact('routes'));
     }
 
@@ -27,10 +35,26 @@ class RouteController extends Controller
      */
     public function create()
     {
-        $routeFiles = RouteFile::latest()->get();
-        $services = Service::latest()->get();
-        $matches = RouteMatch::latest()->get();
-        $rules = Rule::latest()->get();
+        // Get route files for current project
+        $routeFilesQuery = RouteFile::latest();
+        ProjectHelper::scopeToCurrentProject($routeFilesQuery);
+        $routeFiles = $routeFilesQuery->get();
+
+        // Get services for current project
+        $servicesQuery = Service::latest();
+        ProjectHelper::scopeToCurrentProject($servicesQuery);
+        $services = $servicesQuery->get();
+
+        // Get matches for current project
+        $matchesQuery = RouteMatch::latest();
+        ProjectHelper::scopeToCurrentProject($matchesQuery);
+        $matches = $matchesQuery->get();
+
+        // Get rules for current project
+        $rulesQuery = Rule::latest();
+        ProjectHelper::scopeToCurrentProject($rulesQuery);
+        $rules = $rulesQuery->get();
+
         return view('routes.create', compact('routeFiles', 'services', 'matches', 'rules'));
     }
 

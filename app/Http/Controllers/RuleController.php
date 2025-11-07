@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rule;
+use App\Helpers\ProjectHelper;
 use App\Models\Delta;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,9 @@ class RuleController extends Controller
      */
     public function index()
     {
-        $rules = Rule::with('delta')->withCount('routes')->latest()->get();
+        $query = Rule::with('delta')->withCount('routes')->latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $rules = $query->get();
         return view('rules.index', compact('rules'));
     }
 
@@ -22,7 +25,14 @@ class RuleController extends Controller
      */
     public function create()
     {
-        $deltas = Delta::latest()->get();
+        if (!ProjectHelper::hasCurrentProject()) {
+            return redirect()->route('rules.index')
+                ->with('error', 'Please select a project first');
+        }
+
+        $query = Delta::latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $deltas = $query->get();
         return view('rules.create', compact('deltas'));
     }
 
@@ -45,6 +55,13 @@ class RuleController extends Controller
             'delta_cond_ko' => 'nullable|string|max:128',
             'description' => 'nullable|string',
         ]);
+
+        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
+
+        if (!$validated['project_id']) {
+            return redirect()->route('rules.index')
+                ->with('error', 'Please select a project first');
+        }
 
         Rule::create($validated);
 

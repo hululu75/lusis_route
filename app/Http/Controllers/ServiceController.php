@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -12,7 +13,9 @@ class ServiceController extends Controller
      */
     public function index()
     {
-        $services = Service::withCount('routes')->latest()->get();
+        $query = Service::withCount('routes')->latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $services = $query->get();
         return view('services.index', compact('services'));
     }
 
@@ -21,6 +24,12 @@ class ServiceController extends Controller
      */
     public function create()
     {
+        // Check if a project is selected
+        if (!ProjectHelper::hasCurrentProject()) {
+            return redirect()->route('services.index')
+                ->with('error', 'Please select a project first');
+        }
+
         return view('services.create');
     }
 
@@ -33,6 +42,14 @@ class ServiceController extends Controller
             'name' => 'required|string|max:64|unique:services',
             'description' => 'nullable|string',
         ]);
+
+        // Auto-assign current project
+        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
+
+        if (!$validated['project_id']) {
+            return redirect()->route('services.index')
+                ->with('error', 'Please select a project first');
+        }
 
         Service::create($validated);
 

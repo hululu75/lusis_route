@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Delta;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
 class DeltaController extends Controller
@@ -12,7 +13,9 @@ class DeltaController extends Controller
      */
     public function index()
     {
-        $deltas = Delta::withCount('rules')->latest()->get();
+        $query = Delta::withCount('rules')->latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $deltas = $query->get();
         return view('deltas.index', compact('deltas'));
     }
 
@@ -21,6 +24,10 @@ class DeltaController extends Controller
      */
     public function create()
     {
+        if (!ProjectHelper::hasCurrentProject()) {
+            return redirect()->route('deltas.index')
+                ->with('error', 'Please select a project first');
+        }
         return view('deltas.create');
     }
 
@@ -35,6 +42,13 @@ class DeltaController extends Controller
             'definition' => 'nullable|string',
             'description' => 'nullable|string',
         ]);
+
+        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
+
+        if (!$validated['project_id']) {
+            return redirect()->route('deltas.index')
+                ->with('error', 'Please select a project first');
+        }
 
         Delta::create($validated);
 
