@@ -46,10 +46,10 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader
 
-# Create www-data user if not exists
+# Create www-data user if not exists (skip if already exists)
 RUN set -x \
-    && addgroup -g 82 -S www-data \
-    && adduser -u 82 -D -S -G www-data www-data
+    && (addgroup -g 82 -S www-data 2>/dev/null || true) \
+    && (adduser -u 82 -D -S -G www-data www-data 2>/dev/null || true)
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
