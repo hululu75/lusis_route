@@ -209,11 +209,6 @@
                                 <i class="bi bi-card-checklist"></i> Rules
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->is('routes*') ? 'active' : '' }}" href="{{ route('routes.index') }}">
-                                <i class="bi bi-signpost-split"></i> Routes
-                            </a>
-                        </li>
                     </ul>
 
                     <hr style="border-color: rgba(255,255,255,0.2); margin: 1.5rem 1rem;">

@@ -226,91 +226,74 @@
                             @csrf
                             <input type="hidden" name="routefile_id" value="{{ $routeFile->id }}">
 
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="from_service_id" class="form-label">
-                                        From Service <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select @error('from_service_id') is-invalid @enderror"
-                                            id="from_service_id"
-                                            name="from_service_id"
-                                            required>
-                                        <option value="">-- Select Service --</option>
-                                        @foreach($services as $service)
-                                            <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('from_service_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-md-4 mb-3">
-                                    <label for="match_id" class="form-label">
-                                        Match Condition
-                                    </label>
-                                    <select class="form-select @error('match_id') is-invalid @enderror"
-                                            id="match_id"
-                                            name="match_id">
-                                        <option value="">-- No Condition --</option>
-                                        @foreach($matches as $match)
-                                            <option value="{{ $match->id }}">
-                                                {{ $match->name }}
-                                                @if($match->type) ({{ $match->type }}) @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('match_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-md-4 mb-3">
-                                    <label for="rule_id" class="form-label">
-                                        Rule
-                                    </label>
-                                    <select class="form-select @error('rule_id') is-invalid @enderror"
-                                            id="rule_id"
-                                            name="rule_id">
-                                        <option value="">-- No Rule --</option>
-                                        @foreach($rules as $rule)
-                                            <option value="{{ $rule->id }}">
-                                                {{ $rule->name }} → {{ $rule->class }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('rule_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                            <div class="mb-3">
+                                <label for="from_service_id" class="form-label">
+                                    From Service <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select @error('from_service_id') is-invalid @enderror"
+                                        id="from_service_id"
+                                        name="from_service_id"
+                                        required>
+                                    <option value="">-- Select Service --</option>
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('from_service_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="priority" class="form-label">Priority</label>
-                                    <input type="number"
-                                           class="form-control @error('priority') is-invalid @enderror"
-                                           id="priority"
-                                           name="priority"
-                                           value="{{ old('priority', $stats['routes'] + 1) }}"
-                                           placeholder="e.g., 1">
-                                    @error('priority')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                            <div class="mb-3">
+                                <label for="match_id" class="form-label">
+                                    Match Condition
+                                </label>
+                                <select class="form-select @error('match_id') is-invalid @enderror"
+                                        id="match_id"
+                                        name="match_id">
+                                    <option value="">-- No Condition --</option>
+                                    @foreach($matches as $match)
+                                        <option value="{{ $match->id }}">
+                                            {{ $match->name }}
+                                            @if($match->type) ({{ $match->type }}) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('match_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label for="chainclass" class="form-label">Chain Class</label>
-                                    <input type="text"
-                                           class="form-control @error('chainclass') is-invalid @enderror"
-                                           id="chainclass"
-                                           name="chainclass"
-                                           value="{{ old('chainclass') }}"
-                                           placeholder="Optional">
-                                    @error('chainclass')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                            <div class="mb-3">
+                                <label for="rule_id" class="form-label">
+                                    Rule
+                                </label>
+                                <select class="form-select @error('rule_id') is-invalid @enderror"
+                                        id="rule_id"
+                                        name="rule_id">
+                                    <option value="">-- No Rule --</option>
+                                    @foreach($rules as $rule)
+                                        <option value="{{ $rule->id }}">
+                                            {{ $rule->name }} → {{ $rule->class }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('rule_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="chainclass" class="form-label">Chain Class</label>
+                                <input type="text"
+                                       class="form-control @error('chainclass') is-invalid @enderror"
+                                       id="chainclass"
+                                       name="chainclass"
+                                       value="{{ old('chainclass') }}"
+                                       placeholder="Optional">
+                                @error('chainclass')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
