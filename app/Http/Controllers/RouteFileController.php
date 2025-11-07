@@ -111,9 +111,15 @@ class RouteFileController extends Controller
      */
     public function destroy(RouteFile $routeFile)
     {
-        $routeFile->delete();
+        try {
+            $name = $routeFile->name;
+            $routeFile->delete();
 
-        return redirect()->route('route_files.index')
-            ->with('success', 'Route file deleted successfully!');
+            return redirect()->route('route-files.index')
+                ->with('success', "Route file '{$name}' and its routes were deleted successfully!");
+        } catch (\Exception $e) {
+            return redirect()->route('route-files.index')
+                ->with('error', 'Failed to delete route file: ' . $e->getMessage());
+        }
     }
 }

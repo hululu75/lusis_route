@@ -15,6 +15,16 @@ class RouteFile extends Model
         'description',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When deleting a route file, explicitly delete all associated routes first
+        static::deleting(function ($routeFile) {
+            $routeFile->routes()->delete();
+        });
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
