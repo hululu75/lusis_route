@@ -1,38 +1,35 @@
-FROM php:8.4-cli
+FROM php:8.4-cli-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and PHP extensions via apk (Alpine's package manager)
+RUN apk add --no-cache \
+    bash \
     git \
     curl \
     zip \
     unzip \
-    sqlite3 \
-    libsqlite3-dev \
-    libpq-dev \
+    sqlite \
+    sqlite-dev \
+    postgresql-dev \
     libpng-dev \
-    libonig-dev \
+    oniguruma-dev \
     libxml2-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install \
+        pdo_sqlite \
+        pdo_mysql \
+        pdo_pgsql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd
 
-# Install PHP extensions using docker-php-ext-install
-RUN docker-php-ext-install \
-    pdo_sqlite \
-    pdo_mysql \
-    pdo_pgsql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd
-
-# Get latest Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory
+# Copy application files
 COPY . .
 
 # Install PHP dependencies
