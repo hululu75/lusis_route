@@ -9,46 +9,21 @@ services:
     container_name: lusis-route-app
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "8000:8000"
     volumes:
       - ./storage:/var/www/html/storage
       - ./database:/var/www/html/database
       - ./bootstrap/cache:/var/www/html/bootstrap/cache
-    environment:
-      - APP_NAME=${APP_NAME:-Laravel}
-      - APP_ENV=${APP_ENV:-production}
-      - APP_KEY=${APP_KEY}
-      - APP_DEBUG=${APP_DEBUG:-false}
-      - DB_CONNECTION=${DB_CONNECTION:-sqlite}
-      - DB_HOST=${DB_HOST:-postgres}
-      - DB_PORT=${DB_PORT:-5432}
-      - DB_DATABASE=${DB_DATABASE:-lusis_route}
-      - DB_USERNAME=${DB_USERNAME:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD:-secret}
+    env_file:
+      - .env.docker
     # Uncomment if using PostgreSQL
     # depends_on:
     #   postgres:
     #     condition: service_healthy
-    command: >
-      sh -c "
-        echo 'Waiting for database...' &&
-        sleep 3 &&
-        echo 'Setting permissions...' &&
-        chmod -R 775 storage bootstrap/cache &&
-        if [ \"$$DB_CONNECTION\" = \"sqlite\" ]; then
-          echo 'Using SQLite database' &&
-          touch database/database.sqlite &&
-          chmod 666 database/database.sqlite
-        fi &&
-        echo 'Running migrations...' &&
-        php artisan migrate --force &&
-        echo 'Starting server...' &&
-        php artisan serve --host=0.0.0.0 --port=8000
-      "
     networks:
       - lusis-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
       interval: 30s
       timeout: 10s
       retries: 3
