@@ -10,6 +10,7 @@ RUN apk add --no-cache \
     php83-mbstring \
     php83-tokenizer \
     php83-fileinfo \
+    php83-iconv \
     php83-curl \
     php83-xml \
     php83-xmlwriter \
