@@ -148,8 +148,8 @@
                                         <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
                                             @foreach($routes->sortBy('priority') as $route)
                                             <tr class="sortable-row" data-route-id="{{ $route->id }}">
-                                                <td class="text-center">
-                                                    <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
+                                                <td class="text-center drag-handle">
+                                                    <i class="bi bi-grip-vertical text-muted"></i>
                                                 </td>
                                                 <td><span class="badge bg-secondary priority-badge">{{ $route->priority }}</span></td>
                                                 <td>{{ $route->match->name ?? '-' }}</td>
@@ -212,6 +212,49 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Improve drag handle visibility */
+    .drag-handle {
+        cursor: grab !important;
+    }
+    .drag-handle:active {
+        cursor: grabbing !important;
+    }
+    .sortable-row .bi-grip-vertical {
+        cursor: grab !important;
+        font-size: 1.2rem;
+        transition: color 0.2s;
+    }
+    .sortable-row:hover .bi-grip-vertical {
+        color: #0d6efd !important;
+    }
+    .sortable-row .bi-grip-vertical:active {
+        cursor: grabbing !important;
+    }
+    .sortable-row {
+        transition: background-color 0.2s;
+    }
+    .sortable-row:hover {
+        background-color: #f8f9fa;
+    }
+    .sortable-ghost {
+        opacity: 0.5;
+        background: #e3f2fd !important;
+    }
+    .sortable-chosen {
+        background: #e7f3ff !important;
+    }
+    /* Tab styling */
+    .nav-tabs .nav-link {
+        color: #495057;
+    }
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 function confirmDelete() {
@@ -222,14 +265,26 @@ function confirmDelete() {
 
 // Initialize drag and drop sorting for each service group
 document.addEventListener('DOMContentLoaded', function() {
-    const sortableTables = document.querySelectorAll('.sortable-routes');
+    console.log('Initializing sortable tables...');
 
-    sortableTables.forEach(function(tbody) {
+    // Initialize sortable for all service groups
+    const sortableTables = document.querySelectorAll('.sortable-routes');
+    console.log('Found ' + sortableTables.length + ' sortable tables');
+
+    sortableTables.forEach(function(tbody, index) {
+        console.log('Initializing sortable ' + index + ' for service: ' + tbody.dataset.serviceId);
+
         const sortable = Sortable.create(tbody, {
             animation: 150,
             handle: '.bi-grip-vertical',
             ghostClass: 'sortable-ghost',
+            forceFallback: false,
+            onStart: function(evt) {
+                console.log('Drag started');
+            },
             onEnd: function(evt) {
+                console.log('Drag ended, updating priorities...');
+
                 // Get all rows in this service group
                 const rows = tbody.querySelectorAll('.sortable-row');
                 const routeIds = [];
@@ -243,6 +298,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         badge.textContent = index;
                     }
                 });
+
+                console.log('New order:', routeIds);
 
                 // Send AJAX request to update priorities
                 fetch('{{ route("routes.reorder") }}', {
@@ -264,6 +321,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Failed to save new order. Please refresh the page.');
                 });
             }
+        });
+    });
+
+    // Log tab initialization
+    const tabs = document.querySelectorAll('#serviceTabs button[data-bs-toggle="tab"]');
+    console.log('Found ' + tabs.length + ' tabs');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            console.log('Tab switched to: ' + event.target.textContent);
         });
     });
 });
