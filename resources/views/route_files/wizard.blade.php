@@ -229,7 +229,7 @@
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label for="from_service_id" class="form-label">
-                                        From Service (发送方) <span class="text-danger">*</span>
+                                        From Service <span class="text-danger">*</span>
                                     </label>
                                     <select class="form-select @error('from_service_id') is-invalid @enderror"
                                             id="from_service_id"
@@ -247,7 +247,7 @@
 
                                 <div class="col-md-4 mb-3">
                                     <label for="match_id" class="form-label">
-                                        Match Condition (条件)
+                                        Match Condition
                                     </label>
                                     <select class="form-select @error('match_id') is-invalid @enderror"
                                             id="match_id"
@@ -267,7 +267,7 @@
 
                                 <div class="col-md-4 mb-3">
                                     <label for="rule_id" class="form-label">
-                                        Rule (规则)
+                                        Rule
                                     </label>
                                     <select class="form-select @error('rule_id') is-invalid @enderror"
                                             id="rule_id"
@@ -286,8 +286,8 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="priority" class="form-label">Priority (优先级)</label>
+                                <div class="col-md-6 mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
                                     <input type="number"
                                            class="form-control @error('priority') is-invalid @enderror"
                                            id="priority"
@@ -299,24 +299,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-4 mb-3">
-                                    <label for="type" class="form-label">Type (类型)</label>
-                                    <select class="form-select @error('type') is-invalid @enderror"
-                                            id="type"
-                                            name="type">
-                                        <option value="">-- Select Type --</option>
-                                        <option value="REQ">REQ - Request</option>
-                                        <option value="NOT">NOT - Notification</option>
-                                        <option value="SAME">SAME - Same</option>
-                                        <option value="PUB">PUB - Public</option>
-                                        <option value="END">END - Endpoint</option>
-                                    </select>
-                                    @error('type')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label for="chainclass" class="form-label">Chain Class</label>
                                     <input type="text"
                                            class="form-control @error('chainclass') is-invalid @enderror"

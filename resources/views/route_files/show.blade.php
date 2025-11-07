@@ -95,52 +95,64 @@
             </div>
             <div class="card-body">
                 @if($routeFile->routes->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Priority</th>
-                                    <th>Service</th>
-                                    <th>Match</th>
-                                    <th>Rule</th>
-                                    <th>Type</th>
-                                    <th>Chain Class</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($routeFile->routes->sortBy('priority') as $route)
-                                <tr>
-                                    <td><span class="badge bg-secondary">{{ $route->priority }}</span></td>
-                                    <td>{{ $route->service->name ?? '-' }}</td>
-                                    <td>{{ $route->match->name ?? '-' }}</td>
-                                    <td>{{ $route->rule->name ?? '-' }}</td>
-                                    <td>
-                                        @if($route->type)
-                                            <span class="badge bg-info badge-type">{{ $route->type }}</span>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($route->chainclass)
-                                            <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('routes.show', $route->id) }}"
-                                           class="btn btn-sm btn-outline-primary"
-                                           title="View Route">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    @php
+                        $routesByService = $routeFile->routes->groupBy('from_service_id');
+                    @endphp
+
+                    @foreach($routesByService as $serviceId => $routes)
+                        @php
+                            $service = $routes->first()->service;
+                        @endphp
+
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-gear"></i>
+                                From Service: <strong>{{ $service->name ?? 'Unknown' }}</strong>
+                                <span class="badge bg-secondary ms-2">{{ $routes->count() }} routes</span>
+                            </h6>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="50"><i class="bi bi-grip-vertical"></i></th>
+                                            <th>Priority</th>
+                                            <th>Match</th>
+                                            <th>Rule</th>
+                                            <th>Chain Class</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
+                                        @foreach($routes->sortBy('priority') as $route)
+                                        <tr class="sortable-row" data-route-id="{{ $route->id }}">
+                                            <td class="text-center">
+                                                <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
+                                            </td>
+                                            <td><span class="badge bg-secondary priority-badge">{{ $route->priority }}</span></td>
+                                            <td>{{ $route->match->name ?? '-' }}</td>
+                                            <td>{{ $route->rule->name ?? '-' }}</td>
+                                            <td>
+                                                @if($route->chainclass)
+                                                    <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('routes.show', $route->id) }}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="View Route">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endforeach
                 @else
                     <div class="text-center py-4">
                         <i class="bi bi-signpost-split fs-2 text-muted d-block mb-2"></i>
@@ -184,5 +196,53 @@ function confirmDelete() {
         document.getElementById('delete-form').submit();
     }
 }
+
+// Initialize drag and drop sorting for each service group
+document.addEventListener('DOMContentLoaded', function() {
+    const sortableTables = document.querySelectorAll('.sortable-routes');
+
+    sortableTables.forEach(function(tbody) {
+        const sortable = Sortable.create(tbody, {
+            animation: 150,
+            handle: '.bi-grip-vertical',
+            ghostClass: 'sortable-ghost',
+            onEnd: function(evt) {
+                // Get all rows in this service group
+                const rows = tbody.querySelectorAll('.sortable-row');
+                const routeIds = [];
+
+                // Collect route IDs in new order
+                rows.forEach((row, index) => {
+                    routeIds.push(row.dataset.routeId);
+                    // Update priority badge display
+                    const badge = row.querySelector('.priority-badge');
+                    if (badge) {
+                        badge.textContent = index;
+                    }
+                });
+
+                // Send AJAX request to update priorities
+                fetch('{{ route("routes.reorder") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ ids: routeIds })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Routes reordered successfully');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error reordering routes:', error);
+                    alert('Failed to save new order. Please refresh the page.');
+                });
+            }
+        });
+    });
+});
 </script>
 @endpush
