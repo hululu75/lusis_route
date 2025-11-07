@@ -66,7 +66,6 @@ class RouteController extends Controller
         $validated = $request->validate([
             'routefile_id' => 'required|exists:route_files,id',
             'from_service_id' => 'required|exists:services,id',
-            'to_service_id' => 'nullable|exists:services,id',
             'match_id' => 'nullable|exists:matches,id',
             'rule_id' => 'nullable|exists:rules,id',
             'chainclass' => 'nullable|string|max:128',
@@ -116,7 +115,6 @@ class RouteController extends Controller
         $validated = $request->validate([
             'routefile_id' => 'required|exists:route_files,id',
             'from_service_id' => 'required|exists:services,id',
-            'to_service_id' => 'nullable|exists:services,id',
             'match_id' => 'nullable|exists:matches,id',
             'rule_id' => 'nullable|exists:rules,id',
             'chainclass' => 'nullable|string|max:128',

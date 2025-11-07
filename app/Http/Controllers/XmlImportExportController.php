@@ -276,27 +276,28 @@ class XmlImportExportController extends Controller
 
         $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><routing></routing>');
 
-        // Collect unique deltas
-        $deltas = collect();
-        foreach ($routeFile->routes as $route) {
-            if ($route->rule && $route->rule->delta) {
-                $deltas->push($route->rule->delta);
-            }
-        }
-        $deltas = $deltas->unique('id');
+        // Export Routes (First)
+        $routesNode = $xml->addChild('routes');
 
-        // Export Deltas
-        if ($deltas->count() > 0) {
-            $deltasNode = $xml->addChild('deltas');
-            foreach ($deltas as $delta) {
-                $deltaNode = $deltasNode->addChild('delta');
-                $deltaNode->addAttribute('name', $delta->name);
-                if ($delta->next) {
-                    $deltaNode->addAttribute('next', $delta->next);
+        // Group routes by service
+        $routesByService = $routeFile->routes->groupBy('from_service_id');
+
+        foreach ($routesByService as $serviceId => $routes) {
+            $service = $routes->first()->service;
+            $routeNode = $routesNode->addChild('route');
+            $routeNode->addAttribute('class', $service->name);
+
+            foreach ($routes->sortBy('priority') as $route) {
+                $caseNode = $routeNode->addChild('case');
+
+                if ($route->match) {
+                    $caseNode->addAttribute('cond', $route->match->name);
                 }
-                if ($delta->definition) {
-                    // Parse and include delta definition
-                    $deltaNode->addChild('definition', htmlspecialchars($delta->definition));
+                if ($route->rule) {
+                    $caseNode->addAttribute('rule', $route->rule->name);
+                }
+                if ($route->chainclass) {
+                    $caseNode->addAttribute('chainclass', $route->chainclass);
                 }
             }
         }
@@ -310,7 +311,7 @@ class XmlImportExportController extends Controller
         }
         $matches = $matches->unique('id');
 
-        // Export Matches
+        // Export Matches (Second)
         if ($matches->count() > 0) {
             $matchesNode = $xml->addChild('matches');
             foreach ($matches as $match) {
@@ -341,7 +342,7 @@ class XmlImportExportController extends Controller
         }
         $rules = $rules->unique('id');
 
-        // Export Rules
+        // Export Rules (Third)
         if ($rules->count() > 0) {
             $rulesNode = $xml->addChild('rules');
             foreach ($rules as $rule) {
@@ -358,28 +359,27 @@ class XmlImportExportController extends Controller
             }
         }
 
-        // Export Routes
-        $routesNode = $xml->addChild('routes');
+        // Collect unique deltas
+        $deltas = collect();
+        foreach ($routeFile->routes as $route) {
+            if ($route->rule && $route->rule->delta) {
+                $deltas->push($route->rule->delta);
+            }
+        }
+        $deltas = $deltas->unique('id');
 
-        // Group routes by service
-        $routesByService = $routeFile->routes->groupBy('from_service_id');
-
-        foreach ($routesByService as $serviceId => $routes) {
-            $service = $routes->first()->service;
-            $routeNode = $routesNode->addChild('route');
-            $routeNode->addAttribute('class', $service->name);
-
-            foreach ($routes->sortBy('priority') as $route) {
-                $caseNode = $routeNode->addChild('case');
-
-                if ($route->match) {
-                    $caseNode->addAttribute('cond', $route->match->name);
+        // Export Deltas (Fourth)
+        if ($deltas->count() > 0) {
+            $deltasNode = $xml->addChild('deltas');
+            foreach ($deltas as $delta) {
+                $deltaNode = $deltasNode->addChild('delta');
+                $deltaNode->addAttribute('name', $delta->name);
+                if ($delta->next) {
+                    $deltaNode->addAttribute('next', $delta->next);
                 }
-                if ($route->rule) {
-                    $caseNode->addAttribute('rule', $route->rule->name);
-                }
-                if ($route->chainclass) {
-                    $caseNode->addAttribute('chainclass', $route->chainclass);
+                if ($delta->definition) {
+                    // Parse and include delta definition
+                    $deltaNode->addChild('definition', htmlspecialchars($delta->definition));
                 }
             }
         }
