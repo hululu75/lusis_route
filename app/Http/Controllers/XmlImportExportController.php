@@ -83,9 +83,10 @@ class XmlImportExportController extends Controller
                 }
             }
 
-            // Import Matches
-            if (isset($xml->matches->match)) {
-                foreach ($xml->matches->match as $matchXml) {
+            // Import Matches (support both <matches> and <matchs> tags)
+            $matchesNode = isset($xml->matches) ? $xml->matches : (isset($xml->matchs) ? $xml->matchs : null);
+            if ($matchesNode && isset($matchesNode->match)) {
+                foreach ($matchesNode->match as $matchXml) {
                     $matchName = (string)$matchXml['name'];
 
                     // Use firstOrCreate with project_id
