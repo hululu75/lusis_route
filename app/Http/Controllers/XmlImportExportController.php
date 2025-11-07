@@ -41,7 +41,26 @@ class XmlImportExportController extends Controller
 
             $project = Project::findOrFail($request->project_id);
             $xmlContent = file_get_contents($request->file('xml_file')->getRealPath());
-            $xml = new SimpleXMLElement($xmlContent);
+
+            // Handle XML files without declaration by adding a default one if missing
+            $xmlContent = trim($xmlContent);
+            if (!preg_match('/^<\?xml/i', $xmlContent)) {
+                $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . $xmlContent;
+            }
+
+            // Parse XML with error suppression for malformed files
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NOWARNING);
+
+            if ($xml === false) {
+                $errors = libxml_get_errors();
+                libxml_clear_errors();
+                $errorMsg = 'Failed to parse XML file';
+                if (!empty($errors)) {
+                    $errorMsg .= ': ' . $errors[0]->message;
+                }
+                throw new \Exception($errorMsg);
+            }
 
             // Create route file
             $routeFile = RouteFile::create([
