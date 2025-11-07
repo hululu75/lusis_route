@@ -25,9 +25,10 @@ services:
       - DB_DATABASE=${DB_DATABASE:-lusis_route}
       - DB_USERNAME=${DB_USERNAME:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # Uncomment if using PostgreSQL
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
     command: >
       sh -c "
         echo 'Waiting for database...' &&
