@@ -56,12 +56,17 @@
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="{{ route('route-files.show', $routeFile->id) }}"
                                            class="btn btn-outline-primary"
-                                           title="View">
+                                           title="View Details">
                                             <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ route('route-files.wizard', $routeFile->id) }}"
+                                           class="btn btn-outline-success"
+                                           title="Setup Wizard">
+                                            <i class="bi bi-gear"></i>
                                         </a>
                                         <a href="{{ route('route-files.edit', $routeFile->id) }}"
                                            class="btn btn-outline-warning"
-                                           title="Edit">
+                                           title="Edit Info">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button"

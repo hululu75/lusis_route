@@ -5,8 +5,11 @@
 @section('page-description', 'Route File Details')
 
 @section('page-actions')
-    <a href="{{ route('route-files.edit', $routeFile->id) }}" class="btn btn-warning">
-        <i class="bi bi-pencil"></i> Edit
+    <a href="{{ route('route-files.wizard', $routeFile->id) }}" class="btn btn-primary">
+        <i class="bi bi-gear"></i> Setup Wizard
+    </a>
+    <a href="{{ route('route-files.edit', $routeFile->id) }}" class="btn btn-outline-warning">
+        <i class="bi bi-pencil"></i> Edit Info
     </a>
     <a href="{{ route('route-files.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Back
