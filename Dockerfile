@@ -1,23 +1,28 @@
 FROM php:8.4-cli
 
-# Install system dependencies
+# Install system dependencies and PHP extensions in one go
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libpq-dev \
     zip \
     unzip \
     sqlite3 \
-    libsqlite3-dev
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_sqlite pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
+    libsqlite3-dev \
+    libpq-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    # PHP extensions via apt (faster than compiling)
+    php8.4-sqlite3 \
+    php8.4-mysql \
+    php8.4-pgsql \
+    php8.4-mbstring \
+    php8.4-gd \
+    php8.4-bcmath \
+    php8.4-curl \
+    php8.4-xml \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
