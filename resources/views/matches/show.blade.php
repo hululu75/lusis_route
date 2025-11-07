@@ -77,9 +77,8 @@
             <div class="card-body">
                 <div id="alert-container"></div>
 
-                @if($match->conditions->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover" id="conditions-table">
+                <div class="table-responsive" id="conditions-table" @if($match->conditions->count() == 0) style="display: none;" @endif>
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th width="30%">Field</th>
@@ -139,12 +138,10 @@
                         </tbody>
                     </table>
                 </div>
-                @else
-                <p class="text-muted text-center py-4" id="no-conditions-message">
+                <p class="text-muted text-center py-4" id="no-conditions-message" @if($match->conditions->count() > 0) style="display: none;" @endif>
                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                     No conditions defined yet. Click "Add Condition" to create one.
                 </p>
-                @endif
             </div>
         </div>
     </div>

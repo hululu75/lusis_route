@@ -84,7 +84,7 @@ class RouteController extends Controller
      */
     public function show(Route $route)
     {
-        $route->load(['routeFile', 'service', 'match', 'rule']);
+        $route->load(['routeFile', 'service', 'match.conditions', 'rule']);
         return view('routes.show', compact('route'));
     }
 

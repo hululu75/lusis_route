@@ -71,8 +71,8 @@
                             <a href="{{ route('matches.show', $route->match_id) }}">
                                 <i class="bi bi-filter"></i> {{ $route->match->name }}
                             </a>
-                            @if($route->match->conditions_count > 0)
-                                <span class="badge bg-primary ms-2">{{ $route->match->conditions_count }} conditions</span>
+                            @if($route->match->conditions && $route->match->conditions->count() > 0)
+                                <span class="badge bg-primary ms-2">{{ $route->match->conditions->count() }} conditions</span>
                             @endif
                         @else
                             <span class="text-muted">No match condition</span>
