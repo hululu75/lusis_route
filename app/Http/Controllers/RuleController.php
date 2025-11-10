@@ -6,7 +6,7 @@ use App\Models\Rule;
 use App\Helpers\ProjectHelper;
 use App\Models\Delta;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rule as ValidationRule;
 
 class RuleController extends Controller
 {
@@ -60,7 +60,7 @@ class RuleController extends Controller
                 'required',
                 'string',
                 'max:128',
-                Rule::unique('rules')->where(function ($query) use ($projectId) {
+                ValidationRule::unique('rules')->where(function ($query) use ($projectId) {
                     return $query->where('project_id', $projectId);
                 }),
             ],
@@ -115,7 +115,7 @@ class RuleController extends Controller
                 'required',
                 'string',
                 'max:128',
-                Rule::unique('rules')->where(function ($query) use ($rule) {
+                ValidationRule::unique('rules')->where(function ($query) use ($rule) {
                     return $query->where('project_id', $rule->project_id);
                 })->ignore($rule->id),
             ],
