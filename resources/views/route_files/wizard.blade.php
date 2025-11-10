@@ -397,6 +397,19 @@
                                                                    title="Edit Route">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </a>
+                                                                <form action="{{ route('routes.destroy', $route->id) }}"
+                                                                      method="POST"
+                                                                      style="display: inline;"
+                                                                      onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <input type="hidden" name="return_to" value="wizard">
+                                                                    <button type="submit"
+                                                                            class="btn btn-sm btn-outline-danger"
+                                                                            title="Delete Route">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </form>
                                                             </td>
                                                         </tr>
                                                         @endforeach

@@ -295,9 +295,16 @@ class RouteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Route $route)
+    public function destroy(Request $request, Route $route)
     {
+        $routeFileId = $route->routefile_id;
         $route->delete();
+
+        // Check if should return to wizard
+        if ($request->input('return_to') === 'wizard' && $routeFileId) {
+            return redirect()->route('route-files.wizard', $routeFileId)
+                ->with('success', 'Route deleted successfully!');
+        }
 
         return redirect()->route('routes.index')
             ->with('success', 'Route deleted successfully!');
