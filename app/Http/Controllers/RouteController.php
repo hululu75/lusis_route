@@ -84,9 +84,12 @@ class RouteController extends Controller
                 'nullable',
                 'exists:matches,id',
                 function ($attribute, $value, $fail) use ($request, $projectId) {
-                    if ($value) {
+                    // Convert empty string to null for consistent checking
+                    $matchId = ($value === '' || $value === null) ? null : $value;
+
+                    if ($matchId) {
                         // Ensure match belongs to the same project
-                        $match = RouteMatch::find($value);
+                        $match = RouteMatch::find($matchId);
                         if ($match && $match->project_id != $projectId) {
                             $fail('The selected match does not belong to the same project as the route file.');
                             return;
@@ -95,19 +98,21 @@ class RouteController extends Controller
                         // Check if this service already has a route with the same match in this route file
                         $query = Route::where('routefile_id', $request->routefile_id)
                             ->where('from_service_id', $request->from_service_id)
-                            ->where('match_id', $value);
+                            ->where('match_id', $matchId);
 
                         if ($query->exists()) {
                             $fail('This service already has a route with the selected match in this route file.');
                         }
                     } else {
                         // Check for duplicate null match
-                        $query = Route::where('routefile_id', $request->routefile_id)
-                            ->where('from_service_id', $request->from_service_id)
-                            ->whereNull('match_id');
+                        if ($request->routefile_id && $request->from_service_id) {
+                            $query = Route::where('routefile_id', $request->routefile_id)
+                                ->where('from_service_id', $request->from_service_id)
+                                ->whereNull('match_id');
 
-                        if ($query->exists()) {
-                            $fail('This service already has a route without match in this route file.');
+                            if ($query->exists()) {
+                                $fail('This service already has a route without match in this route file.');
+                            }
                         }
                     }
                 },
@@ -129,6 +134,14 @@ class RouteController extends Controller
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'priority' => 'nullable|integer',
         ]);
+
+        // Convert empty strings to null for nullable foreign keys
+        if (isset($validated['match_id']) && $validated['match_id'] === '') {
+            $validated['match_id'] = null;
+        }
+        if (isset($validated['rule_id']) && $validated['rule_id'] === '') {
+            $validated['rule_id'] = null;
+        }
 
         $route = Route::create($validated);
 
@@ -190,9 +203,12 @@ class RouteController extends Controller
                 'nullable',
                 'exists:matches,id',
                 function ($attribute, $value, $fail) use ($request, $route, $projectId) {
-                    if ($value) {
+                    // Convert empty string to null for consistent checking
+                    $matchId = ($value === '' || $value === null) ? null : $value;
+
+                    if ($matchId) {
                         // Ensure match belongs to the same project
-                        $match = RouteMatch::find($value);
+                        $match = RouteMatch::find($matchId);
                         if ($match && $match->project_id != $projectId) {
                             $fail('The selected match does not belong to the same project as the route file.');
                             return;
@@ -202,20 +218,22 @@ class RouteController extends Controller
                         $query = Route::where('routefile_id', $request->routefile_id)
                             ->where('from_service_id', $request->from_service_id)
                             ->where('id', '!=', $route->id)
-                            ->where('match_id', $value);
+                            ->where('match_id', $matchId);
 
                         if ($query->exists()) {
                             $fail('This service already has a route with the selected match in this route file.');
                         }
                     } else {
                         // Check for duplicate null match
-                        $query = Route::where('routefile_id', $request->routefile_id)
-                            ->where('from_service_id', $request->from_service_id)
-                            ->where('id', '!=', $route->id)
-                            ->whereNull('match_id');
+                        if ($request->routefile_id && $request->from_service_id) {
+                            $query = Route::where('routefile_id', $request->routefile_id)
+                                ->where('from_service_id', $request->from_service_id)
+                                ->where('id', '!=', $route->id)
+                                ->whereNull('match_id');
 
-                        if ($query->exists()) {
-                            $fail('This service already has a route without match in this route file.');
+                            if ($query->exists()) {
+                                $fail('This service already has a route without match in this route file.');
+                            }
                         }
                     }
                 },
@@ -237,6 +255,14 @@ class RouteController extends Controller
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'priority' => 'nullable|integer',
         ]);
+
+        // Convert empty strings to null for nullable foreign keys
+        if (isset($validated['match_id']) && $validated['match_id'] === '') {
+            $validated['match_id'] = null;
+        }
+        if (isset($validated['rule_id']) && $validated['rule_id'] === '') {
+            $validated['rule_id'] = null;
+        }
 
         $route->update($validated);
 
