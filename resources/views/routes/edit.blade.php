@@ -130,7 +130,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('routes.index') }}" class="btn btn-secondary">
+                        <a href="{{ request('return_to') === 'wizard' && request('route_file_id') ? route('route-files.wizard', request('route_file_id')) : route('routes.index') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Cancel
                         </a>
                         <button type="submit" class="btn btn-primary">
