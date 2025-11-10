@@ -77,16 +77,27 @@ class RouteFileController extends Controller
         // Group routes by service
         $routesByService = $routeFile->routes->groupBy('from_service_id');
 
-        // Get all matches, rules, deltas from the same project
-        $projectId = $routeFile->project_id;
-        $matches = RouteMatch::with('conditions')
-            ->where('project_id', $projectId)
-            ->get();
-        $rules = Rule::with('delta')
-            ->where('project_id', $projectId)
-            ->get();
-        $deltas = Delta::where('project_id', $projectId)
-            ->get();
+        // Collect only matches, rules, deltas that are used in routes
+        $matches = collect();
+        $rules = collect();
+        $deltas = collect();
+
+        foreach ($routeFile->routes as $route) {
+            if ($route->match) {
+                $matches->push($route->match);
+            }
+            if ($route->rule) {
+                $rules->push($route->rule);
+                if ($route->rule->delta) {
+                    $deltas->push($route->rule->delta);
+                }
+            }
+        }
+
+        // Remove duplicates
+        $matches = $matches->unique('id');
+        $rules = $rules->unique('id');
+        $deltas = $deltas->unique('id');
 
         // Export Routes with aligned cases
         if ($routesByService->count() > 0) {
