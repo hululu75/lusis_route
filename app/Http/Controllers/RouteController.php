@@ -115,15 +115,13 @@ class RouteController extends Controller
                         }
                     } else {
                         // Check for duplicate null match
-                        if ($routeFileId && $fromServiceId) {
-                            $exists = Route::where('routefile_id', $routeFileId)
-                                ->where('from_service_id', $fromServiceId)
-                                ->whereNull('match_id')
-                                ->exists();
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
+                            ->whereNull('match_id')
+                            ->exists();
 
-                            if ($exists) {
-                                $fail('This service already has a route without match in this route file.');
-                            }
+                        if ($exists) {
+                            $fail('This service already has a route without match in this route file.');
                         }
                     }
                 },
@@ -246,16 +244,14 @@ class RouteController extends Controller
                         }
                     } else {
                         // Check for duplicate null match
-                        if ($routeFileId && $fromServiceId) {
-                            $exists = Route::where('routefile_id', $routeFileId)
-                                ->where('from_service_id', $fromServiceId)
-                                ->where('id', '!=', $route->id)
-                                ->whereNull('match_id')
-                                ->exists();
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
+                            ->where('id', '!=', $route->id)
+                            ->whereNull('match_id')
+                            ->exists();
 
-                            if ($exists) {
-                                $fail('This service already has a route without match in this route file.');
-                            }
+                        if ($exists) {
+                            $fail('This service already has a route without match in this route file.');
                         }
                     }
                 },
