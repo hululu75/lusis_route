@@ -124,6 +124,13 @@ class RouteController extends Controller
 
         $route->update($validated);
 
+        // Check if request came from wizard (by checking referer)
+        $referer = $request->headers->get('referer');
+        if ($referer && str_contains($referer, '/wizard')) {
+            return redirect()->route('route-files.wizard', $validated['routefile_id'])
+                ->with('success', 'Route updated successfully!');
+        }
+
         return redirect()->route('routes.index')
             ->with('success', 'Route updated successfully!');
     }

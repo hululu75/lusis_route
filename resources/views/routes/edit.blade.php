@@ -107,7 +107,7 @@
                             <div class="form-text">Optional chain class identifier</div>
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="type" class="form-label">Type</label>
                             <select class="form-select @error('type') is-invalid @enderror"
                                     id="type"
@@ -120,20 +120,6 @@
                                 <option value="END" {{ old('type', $route->type) == 'END' ? 'selected' : '' }}>END</option>
                             </select>
                             @error('type')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
-                            <input type="number"
-                                   class="form-control @error('priority') is-invalid @enderror"
-                                   id="priority"
-                                   name="priority"
-                                   value="{{ old('priority', $route->priority) }}"
-                                   min="1"
-                                   required>
-                            @error('priority')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
