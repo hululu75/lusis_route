@@ -85,7 +85,6 @@ class RouteController extends Controller
                 },
             ],
             'match_id' => [
-                'nullable',
                 function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
@@ -213,7 +212,6 @@ class RouteController extends Controller
                 },
             ],
             'match_id' => [
-                'nullable',
                 function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $route, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
