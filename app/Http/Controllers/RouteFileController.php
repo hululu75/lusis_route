@@ -78,7 +78,7 @@ class RouteFileController extends Controller
 
         $routeFile->update($validated);
 
-        return redirect()->route('route_files.index')
+        return redirect()->route('route-files.index')
             ->with('success', 'Route file updated successfully!');
     }
 
