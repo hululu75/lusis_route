@@ -88,6 +88,24 @@
             </div>
         </div>
 
+        <!-- XML Preview Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="bi bi-code-square"></i> XML Preview</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyXmlToClipboard()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <a href="{{ route('xml.export') }}?route_file_id={{ $routeFile->id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-download"></i> Download XML
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <pre class="mb-0" style="max-height: 500px; overflow-y: auto; background-color: #2d2d2d; color: #f8f8f2; padding: 1rem; border-radius: 0 0 0.375rem 0.375rem;"><code id="xml-content" class="language-xml">{{ $xmlPreview }}</code></pre>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0"><i class="bi bi-signpost-split"></i> Routes in This File</h5>
@@ -270,6 +288,25 @@ function confirmDelete() {
     if (confirm('Are you sure you want to delete this route file? This will also delete {{ $routeFile->routes->count() }} route(s).')) {
         document.getElementById('delete-form').submit();
     }
+}
+
+function copyXmlToClipboard() {
+    const xmlContent = document.getElementById('xml-content').textContent;
+    navigator.clipboard.writeText(xmlContent).then(function() {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(function(error) {
+        alert('Failed to copy XML to clipboard');
+    });
 }
 
 // Initialize drag and drop sorting for each service group

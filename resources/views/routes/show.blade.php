@@ -218,23 +218,96 @@ function confirmDelete() {
 
 // Create route flow diagram with vis.js
 document.addEventListener('DOMContentLoaded', function() {
-    const nodes = new vis.DataSet([
-        { id: 1, label: 'Route File\n{{ $route->routeFile->name ?? "N/A" }}', color: '#667eea', shape: 'box' },
-        { id: 2, label: 'Service\n{{ $route->service->name ?? "N/A" }}', color: '#f093fb', shape: 'ellipse' },
-        { id: 3, label: 'Match\n{{ $route->match->name ?? "None" }}', color: '#4facfe', shape: 'diamond' },
-        { id: 4, label: 'Rule\n{{ $route->rule->name ?? "None" }}', color: '#43e97b', shape: 'box' },
-        { id: 5, label: 'Output\nPriority: {{ $route->priority }}', color: '#fa709a', shape: 'ellipse' }
-    ]);
+    const nodes = [];
+    const edges = [];
+    let nodeId = 1;
 
-    const edges = new vis.DataSet([
-        { from: 1, to: 2, arrows: 'to', label: 'contains' },
-        { from: 2, to: 3, arrows: 'to', label: 'uses' },
-        { from: 3, to: 4, arrows: 'to', label: 'applies' },
-        { from: 4, to: 5, arrows: 'to', label: 'produces' }
-    ]);
+    // Service node
+    nodes.push({
+        id: nodeId,
+        label: 'From Service\n{{ $route->service->name ?? "N/A" }}',
+        color: '#f093fb',
+        shape: 'ellipse'
+    });
+    const serviceId = nodeId++;
+
+    // Match and Conditions
+    @if($route->match)
+        nodes.push({
+            id: nodeId,
+            label: 'Match\n{{ $route->match->name }}',
+            color: '#4facfe',
+            shape: 'diamond'
+        });
+        const matchId = nodeId++;
+        edges.push({ from: serviceId, to: matchId, arrows: 'to', label: 'if' });
+
+        @if($route->match->conditions && $route->match->conditions->count() > 0)
+            @foreach($route->match->conditions as $condition)
+                nodes.push({
+                    id: nodeId,
+                    label: 'Condition\n{{ $condition->field }}\n{{ $condition->operator }} {{ $condition->value ?? "" }}',
+                    color: '#00d2ff',
+                    shape: 'box',
+                    font: { size: 11, color: '#ffffff' }
+                });
+                edges.push({ from: matchId, to: nodeId, arrows: 'to', label: 'check', dashes: true });
+                nodeId++;
+            @endforeach
+        @endif
+
+        // Rule node
+        @if($route->rule)
+            nodes.push({
+                id: nodeId,
+                label: 'Rule\n{{ $route->rule->name }}\n\nClass:\n{{ $route->rule->class }}',
+                color: '#43e97b',
+                shape: 'box'
+            });
+            const ruleId = nodeId++;
+            edges.push({ from: matchId, to: ruleId, arrows: 'to', label: 'then' });
+
+            // Chain Class if exists
+            @if($route->chainclass)
+                nodes.push({
+                    id: nodeId,
+                    label: 'Chain Class\n{{ $route->chainclass }}',
+                    color: '#fa709a',
+                    shape: 'ellipse'
+                });
+                edges.push({ from: ruleId, to: nodeId, arrows: 'to', label: 'execute' });
+            @endif
+        @endif
+    @else
+        // No match - direct to rule
+        @if($route->rule)
+            nodes.push({
+                id: nodeId,
+                label: 'Rule\n{{ $route->rule->name }}\n\nClass:\n{{ $route->rule->class }}',
+                color: '#43e97b',
+                shape: 'box'
+            });
+            const ruleId = nodeId++;
+            edges.push({ from: serviceId, to: ruleId, arrows: 'to', label: 'execute' });
+
+            // Chain Class if exists
+            @if($route->chainclass)
+                nodes.push({
+                    id: nodeId,
+                    label: 'Chain Class\n{{ $route->chainclass }}',
+                    color: '#fa709a',
+                    shape: 'ellipse'
+                });
+                edges.push({ from: ruleId, to: nodeId, arrows: 'to', label: 'chain' });
+            @endif
+        @endif
+    @endif
+
+    const nodesDataSet = new vis.DataSet(nodes);
+    const edgesDataSet = new vis.DataSet(edges);
 
     const container = document.getElementById('route-network');
-    const data = { nodes: nodes, edges: edges };
+    const data = { nodes: nodesDataSet, edges: edgesDataSet };
     const options = {
         nodes: {
             font: {

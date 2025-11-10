@@ -54,8 +54,134 @@ class RouteFileController extends Controller
      */
     public function show(RouteFile $routeFile)
     {
-        $routeFile->load(['project', 'routes']);
-        return view('route_files.show', compact('routeFile'));
+        $routeFile->load(['project', 'routes.service', 'routes.match.conditions', 'routes.rule.delta']);
+
+        // Generate XML preview
+        $xmlPreview = $this->generateXmlPreview($routeFile);
+
+        return view('route_files.show', compact('routeFile', 'xmlPreview'));
+    }
+
+    /**
+     * Generate XML preview for route file
+     */
+    private function generateXmlPreview(RouteFile $routeFile)
+    {
+        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><routing></routing>');
+
+        // Export Routes (First)
+        $routesNode = $xml->addChild('routes');
+
+        // Group routes by service
+        $routesByService = $routeFile->routes->groupBy('from_service_id');
+
+        foreach ($routesByService as $serviceId => $routes) {
+            $service = $routes->first()->service;
+            if (!$service) continue;
+
+            $routeNode = $routesNode->addChild('route');
+            $routeNode->addAttribute('class', $service->name);
+
+            foreach ($routes->sortBy('priority') as $route) {
+                $caseNode = $routeNode->addChild('case');
+
+                if ($route->match) {
+                    $caseNode->addAttribute('cond', $route->match->name);
+                }
+                if ($route->rule) {
+                    $caseNode->addAttribute('rule', $route->rule->name);
+                }
+                if ($route->chainclass) {
+                    $caseNode->addAttribute('chainclass', $route->chainclass);
+                }
+            }
+        }
+
+        // Collect unique matches
+        $matches = collect();
+        foreach ($routeFile->routes as $route) {
+            if ($route->match) {
+                $matches->push($route->match);
+            }
+        }
+        $matches = $matches->unique('id');
+
+        // Export Matches (Second)
+        if ($matches->count() > 0) {
+            $matchesNode = $xml->addChild('matches');
+            foreach ($matches as $match) {
+                $matchNode = $matchesNode->addChild('match');
+                $matchNode->addAttribute('name', $match->name);
+                if ($match->type) {
+                    $matchNode->addAttribute('type', $match->type);
+                }
+
+                // Export conditions
+                foreach ($match->conditions as $condition) {
+                    $condNode = $matchNode->addChild('condition');
+                    $condNode->addAttribute('field', $condition->field);
+                    $condNode->addAttribute('operator', $condition->operator);
+                    if ($condition->value) {
+                        $condNode->addAttribute('value', $condition->value);
+                    }
+                }
+            }
+        }
+
+        // Collect unique rules
+        $rules = collect();
+        foreach ($routeFile->routes as $route) {
+            if ($route->rule) {
+                $rules->push($route->rule);
+            }
+        }
+        $rules = $rules->unique('id');
+
+        // Export Rules (Third)
+        if ($rules->count() > 0) {
+            $rulesNode = $xml->addChild('rules');
+            foreach ($rules as $rule) {
+                $ruleNode = $rulesNode->addChild('rule');
+                $ruleNode->addAttribute('name', $rule->name);
+                $ruleNode->addAttribute('class', $rule->class);
+                $ruleNode->addAttribute('type', $rule->type);
+                if ($rule->delta) {
+                    $ruleNode->addAttribute('delta', $rule->delta->name);
+                }
+                if ($rule->on_failure) {
+                    $ruleNode->addAttribute('on_failure', $rule->on_failure);
+                }
+            }
+        }
+
+        // Collect unique deltas
+        $deltas = collect();
+        foreach ($routeFile->routes as $route) {
+            if ($route->rule && $route->rule->delta) {
+                $deltas->push($route->rule->delta);
+            }
+        }
+        $deltas = $deltas->unique('id');
+
+        // Export Deltas (Fourth)
+        if ($deltas->count() > 0) {
+            $deltasNode = $xml->addChild('deltas');
+            foreach ($deltas as $delta) {
+                $deltaNode = $deltasNode->addChild('delta');
+                $deltaNode->addAttribute('name', $delta->name);
+                if ($delta->next) {
+                    $deltaNode->addAttribute('next', $delta->next);
+                }
+            }
+        }
+
+        // Format XML with proper indentation
+        $dom = new \DOMDocument('1.0');
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->loadXML($xml->asXML());
+
+        return $dom->saveXML();
     }
 
     /**
