@@ -82,35 +82,42 @@ class RouteController extends Controller
             ],
             'match_id' => [
                 'nullable',
-                'exists:matches,id',
                 function ($attribute, $value, $fail) use ($request, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
 
                     if ($matchId) {
-                        // Ensure match belongs to the same project
+                        // Check if match exists
                         $match = RouteMatch::find($matchId);
-                        if ($match && $match->project_id != $projectId) {
+                        if (!$match) {
+                            $fail('The selected match does not exist.');
+                            return;
+                        }
+
+                        // Ensure match belongs to the same project
+                        if ($match->project_id != $projectId) {
                             $fail('The selected match does not belong to the same project as the route file.');
                             return;
                         }
 
                         // Check if this service already has a route with the same match in this route file
-                        $query = Route::where('routefile_id', $request->routefile_id)
+                        $exists = Route::where('routefile_id', $request->routefile_id)
                             ->where('from_service_id', $request->from_service_id)
-                            ->where('match_id', $matchId);
+                            ->where('match_id', $matchId)
+                            ->exists();
 
-                        if ($query->exists()) {
+                        if ($exists) {
                             $fail('This service already has a route with the selected match in this route file.');
                         }
                     } else {
                         // Check for duplicate null match
                         if ($request->routefile_id && $request->from_service_id) {
-                            $query = Route::where('routefile_id', $request->routefile_id)
+                            $exists = Route::where('routefile_id', $request->routefile_id)
                                 ->where('from_service_id', $request->from_service_id)
-                                ->whereNull('match_id');
+                                ->whereNull('match_id')
+                                ->exists();
 
-                            if ($query->exists()) {
+                            if ($exists) {
                                 $fail('This service already has a route without match in this route file.');
                             }
                         }
@@ -201,37 +208,44 @@ class RouteController extends Controller
             ],
             'match_id' => [
                 'nullable',
-                'exists:matches,id',
                 function ($attribute, $value, $fail) use ($request, $route, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
 
                     if ($matchId) {
-                        // Ensure match belongs to the same project
+                        // Check if match exists
                         $match = RouteMatch::find($matchId);
-                        if ($match && $match->project_id != $projectId) {
+                        if (!$match) {
+                            $fail('The selected match does not exist.');
+                            return;
+                        }
+
+                        // Ensure match belongs to the same project
+                        if ($match->project_id != $projectId) {
                             $fail('The selected match does not belong to the same project as the route file.');
                             return;
                         }
 
                         // Check if this service already has a route with the same match in this route file
-                        $query = Route::where('routefile_id', $request->routefile_id)
+                        $exists = Route::where('routefile_id', $request->routefile_id)
                             ->where('from_service_id', $request->from_service_id)
                             ->where('id', '!=', $route->id)
-                            ->where('match_id', $matchId);
+                            ->where('match_id', $matchId)
+                            ->exists();
 
-                        if ($query->exists()) {
+                        if ($exists) {
                             $fail('This service already has a route with the selected match in this route file.');
                         }
                     } else {
                         // Check for duplicate null match
                         if ($request->routefile_id && $request->from_service_id) {
-                            $query = Route::where('routefile_id', $request->routefile_id)
+                            $exists = Route::where('routefile_id', $request->routefile_id)
                                 ->where('from_service_id', $request->from_service_id)
                                 ->where('id', '!=', $route->id)
-                                ->whereNull('match_id');
+                                ->whereNull('match_id')
+                                ->exists();
 
-                            if ($query->exists()) {
+                            if ($exists) {
                                 $fail('This service already has a route without match in this route file.');
                             }
                         }
