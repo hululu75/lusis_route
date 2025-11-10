@@ -10,8 +10,10 @@ use App\Models\MatchCondition;
 use App\Models\Rule;
 use App\Models\RouteFile;
 use App\Models\Route;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class ProjectController extends Controller
 {
@@ -220,6 +222,11 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        // If deleting the currently selected project, clear the session
+        if (ProjectHelper::getCurrentProjectId() === $project->id) {
+            Session::forget('current_project_id');
+        }
+
         $project->delete();
 
         return redirect()->route('projects.index')
