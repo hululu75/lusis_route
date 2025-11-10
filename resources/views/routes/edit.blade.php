@@ -19,6 +19,10 @@
                     @csrf
                     @method('PUT')
 
+                    <!-- Hidden fields for return navigation -->
+                    <input type="hidden" name="return_to" value="{{ request('return_to') }}">
+                    <input type="hidden" name="route_file_id" value="{{ request('route_file_id') }}">
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="routefile_id" class="form-label">Route File <span class="text-danger">*</span></label>

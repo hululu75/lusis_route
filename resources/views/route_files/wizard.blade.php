@@ -392,7 +392,7 @@
                                                                    title="View Route">
                                                                     <i class="bi bi-eye"></i>
                                                                 </a>
-                                                                <a href="{{ route('routes.edit', $route->id) }}"
+                                                                <a href="{{ route('routes.edit', ['route' => $route->id, 'return_to' => 'wizard', 'route_file_id' => $routeFile->id]) }}"
                                                                    class="btn btn-sm btn-outline-warning"
                                                                    title="Edit Route">
                                                                     <i class="bi bi-pencil"></i>
