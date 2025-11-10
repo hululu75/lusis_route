@@ -125,6 +125,11 @@ networks:
   lusis-network:
     driver: bridge
     name: lusis-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
 
 volumes:
   postgres-data:
