@@ -12,11 +12,17 @@ class RouteMatchController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = RouteMatch::withCount(['conditions', 'routes'])->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $matches = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('matches.embed', compact('matches'));
+        }
+
         return view('matches.index', compact('matches'));
     }
 

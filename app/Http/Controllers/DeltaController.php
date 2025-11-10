@@ -12,11 +12,17 @@ class DeltaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Delta::withCount('rules')->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $deltas = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('deltas.embed', compact('deltas'));
+        }
+
         return view('deltas.index', compact('deltas'));
     }
 

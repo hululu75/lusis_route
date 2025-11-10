@@ -522,7 +522,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('services.index') }}" style="width:100%; height:600px; border:none;" id="viewServicesFrame"></iframe>
+                <iframe src="{{ route('services.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewServicesFrame"></iframe>
             </div>
         </div>
     </div>
@@ -552,7 +552,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('matches.index') }}" style="width:100%; height:600px; border:none;" id="viewMatchesFrame"></iframe>
+                <iframe src="{{ route('matches.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewMatchesFrame"></iframe>
             </div>
         </div>
     </div>
@@ -582,7 +582,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('deltas.index') }}" style="width:100%; height:600px; border:none;" id="viewDeltasFrame"></iframe>
+                <iframe src="{{ route('deltas.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewDeltasFrame"></iframe>
             </div>
         </div>
     </div>
@@ -612,7 +612,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('rules.index') }}" style="width:100%; height:600px; border:none;" id="viewRulesFrame"></iframe>
+                <iframe src="{{ route('rules.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewRulesFrame"></iframe>
             </div>
         </div>
     </div>

@@ -13,11 +13,17 @@ class RuleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Rule::with('delta')->withCount('routes')->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $rules = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('rules.embed', compact('rules'));
+        }
+
         return view('rules.index', compact('rules'));
     }
 

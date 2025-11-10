@@ -12,11 +12,17 @@ class ServiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Service::withCount('routes')->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $services = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('services.embed', compact('services'));
+        }
+
         return view('services.index', compact('services'));
     }
 
