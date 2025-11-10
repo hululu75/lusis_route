@@ -129,14 +129,26 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ route('routes.index') }}" class="btn btn-secondary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ request('return_to') === 'wizard' && request('route_file_id') ? route('route-files.wizard', request('route_file_id')) : route('routes.index') }}" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Cancel
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Update Route
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-danger" onclick="if(confirm('Are you sure you want to delete this route?')) document.getElementById('delete-form').submit();">
+                                <i class="bi bi-trash"></i> Delete Route
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Update Route
+                            </button>
+                        </div>
                     </div>
+                </form>
+
+                <!-- Delete Form -->
+                <form id="delete-form" action="{{ route('routes.destroy', $route->id) }}" method="POST" style="display: none;">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="return_to" value="{{ request('return_to') }}">
                 </form>
             </div>
         </div>

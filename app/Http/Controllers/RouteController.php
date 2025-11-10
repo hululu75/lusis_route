@@ -85,7 +85,6 @@ class RouteController extends Controller
                 },
             ],
             'match_id' => [
-                'nullable',
                 function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
@@ -115,15 +114,13 @@ class RouteController extends Controller
                         }
                     } else {
                         // Check for duplicate null match
-                        if ($routeFileId && $fromServiceId) {
-                            $exists = Route::where('routefile_id', $routeFileId)
-                                ->where('from_service_id', $fromServiceId)
-                                ->whereNull('match_id')
-                                ->exists();
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
+                            ->whereNull('match_id')
+                            ->exists();
 
-                            if ($exists) {
-                                $fail('This service already has a route without match in this route file.');
-                            }
+                        if ($exists) {
+                            $fail('This service already has a route without match in this route file.');
                         }
                     }
                 },
@@ -215,7 +212,6 @@ class RouteController extends Controller
                 },
             ],
             'match_id' => [
-                'nullable',
                 function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $route, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
@@ -246,16 +242,14 @@ class RouteController extends Controller
                         }
                     } else {
                         // Check for duplicate null match
-                        if ($routeFileId && $fromServiceId) {
-                            $exists = Route::where('routefile_id', $routeFileId)
-                                ->where('from_service_id', $fromServiceId)
-                                ->where('id', '!=', $route->id)
-                                ->whereNull('match_id')
-                                ->exists();
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
+                            ->where('id', '!=', $route->id)
+                            ->whereNull('match_id')
+                            ->exists();
 
-                            if ($exists) {
-                                $fail('This service already has a route without match in this route file.');
-                            }
+                        if ($exists) {
+                            $fail('This service already has a route without match in this route file.');
                         }
                     }
                 },
@@ -301,9 +295,16 @@ class RouteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Route $route)
+    public function destroy(Request $request, Route $route)
     {
+        $routeFileId = $route->routefile_id;
         $route->delete();
+
+        // Check if should return to wizard
+        if ($request->input('return_to') === 'wizard' && $routeFileId) {
+            return redirect()->route('route-files.wizard', $routeFileId)
+                ->with('success', 'Route deleted successfully!');
+        }
 
         return redirect()->route('routes.index')
             ->with('success', 'Route deleted successfully!');
