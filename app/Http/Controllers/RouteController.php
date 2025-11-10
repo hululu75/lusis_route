@@ -63,8 +63,12 @@ class RouteController extends Controller
      */
     public function store(Request $request)
     {
+        // Get form values before validation to use in closure
+        $routeFileId = $request->input('routefile_id');
+        $fromServiceId = $request->input('from_service_id');
+
         // Get the project ID from the route file
-        $routeFile = RouteFile::findOrFail($request->routefile_id);
+        $routeFile = RouteFile::findOrFail($routeFileId);
         $projectId = $routeFile->project_id;
 
         $validated = $request->validate([
@@ -82,7 +86,7 @@ class RouteController extends Controller
             ],
             'match_id' => [
                 'nullable',
-                function ($attribute, $value, $fail) use ($request, $projectId) {
+                function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
 
@@ -101,8 +105,8 @@ class RouteController extends Controller
                         }
 
                         // Check if this service already has a route with the same match in this route file
-                        $exists = Route::where('routefile_id', $request->routefile_id)
-                            ->where('from_service_id', $request->from_service_id)
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
                             ->where('match_id', $matchId)
                             ->exists();
 
@@ -111,9 +115,9 @@ class RouteController extends Controller
                         }
                     } else {
                         // Check for duplicate null match
-                        if ($request->routefile_id && $request->from_service_id) {
-                            $exists = Route::where('routefile_id', $request->routefile_id)
-                                ->where('from_service_id', $request->from_service_id)
+                        if ($routeFileId && $fromServiceId) {
+                            $exists = Route::where('routefile_id', $routeFileId)
+                                ->where('from_service_id', $fromServiceId)
                                 ->whereNull('match_id')
                                 ->exists();
 
@@ -189,8 +193,12 @@ class RouteController extends Controller
      */
     public function update(Request $request, Route $route)
     {
+        // Get form values before validation to use in closure
+        $routeFileId = $request->input('routefile_id');
+        $fromServiceId = $request->input('from_service_id');
+
         // Get the project ID from the route file
-        $routeFile = RouteFile::findOrFail($request->routefile_id);
+        $routeFile = RouteFile::findOrFail($routeFileId);
         $projectId = $routeFile->project_id;
 
         $validated = $request->validate([
@@ -208,7 +216,7 @@ class RouteController extends Controller
             ],
             'match_id' => [
                 'nullable',
-                function ($attribute, $value, $fail) use ($request, $route, $projectId) {
+                function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $route, $projectId) {
                     // Convert empty string to null for consistent checking
                     $matchId = ($value === '' || $value === null) ? null : $value;
 
@@ -227,8 +235,8 @@ class RouteController extends Controller
                         }
 
                         // Check if this service already has a route with the same match in this route file
-                        $exists = Route::where('routefile_id', $request->routefile_id)
-                            ->where('from_service_id', $request->from_service_id)
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
                             ->where('id', '!=', $route->id)
                             ->where('match_id', $matchId)
                             ->exists();
@@ -238,9 +246,9 @@ class RouteController extends Controller
                         }
                     } else {
                         // Check for duplicate null match
-                        if ($request->routefile_id && $request->from_service_id) {
-                            $exists = Route::where('routefile_id', $request->routefile_id)
-                                ->where('from_service_id', $request->from_service_id)
+                        if ($routeFileId && $fromServiceId) {
+                            $exists = Route::where('routefile_id', $routeFileId)
+                                ->where('from_service_id', $fromServiceId)
                                 ->where('id', '!=', $route->id)
                                 ->whereNull('match_id')
                                 ->exists();
