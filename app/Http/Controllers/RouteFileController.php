@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RouteFile;
 use App\Models\Project;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
 class RouteFileController extends Controller
@@ -13,7 +14,9 @@ class RouteFileController extends Controller
      */
     public function index()
     {
-        $routeFiles = RouteFile::with('project')->withCount('routes')->latest()->get();
+        $query = RouteFile::with('project')->withCount('routes')->latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $routeFiles = $query->get();
         return view('route_files.index', compact('routeFiles'));
     }
 

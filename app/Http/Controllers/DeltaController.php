@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Delta;
 use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DeltaController extends Controller
 {
@@ -36,19 +37,28 @@ class DeltaController extends Controller
      */
     public function store(Request $request)
     {
+        $projectId = ProjectHelper::getCurrentProjectId();
+
+        if (!$projectId) {
+            return redirect()->route('deltas.index')
+                ->with('error', 'Please select a project first');
+        }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:128|unique:deltas',
+            'name' => [
+                'required',
+                'string',
+                'max:128',
+                Rule::unique('deltas')->where(function ($query) use ($projectId) {
+                    return $query->where('project_id', $projectId);
+                }),
+            ],
             'next' => 'nullable|string|max:128',
             'definition' => 'nullable|string',
             'description' => 'nullable|string',
         ]);
 
-        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
-
-        if (!$validated['project_id']) {
-            return redirect()->route('deltas.index')
-                ->with('error', 'Please select a project first');
-        }
+        $validated['project_id'] = $projectId;
 
         Delta::create($validated);
 
@@ -79,7 +89,14 @@ class DeltaController extends Controller
     public function update(Request $request, Delta $delta)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:128|unique:deltas,name,' . $delta->id,
+            'name' => [
+                'required',
+                'string',
+                'max:128',
+                Rule::unique('deltas')->where(function ($query) use ($delta) {
+                    return $query->where('project_id', $delta->project_id);
+                })->ignore($delta->id),
+            ],
             'next' => 'nullable|string|max:128',
             'definition' => 'nullable|string',
             'description' => 'nullable|string',
