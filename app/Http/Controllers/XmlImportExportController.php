@@ -191,7 +191,7 @@ class XmlImportExportController extends Controller
                         $stats['services']++;
                     }
 
-                    // Process cases
+                    // Process cases (new format)
                     if (isset($routeXml->case)) {
                         foreach ($routeXml->case as $caseXml) {
                             $matchName = isset($caseXml['cond']) ? (string)$caseXml['cond'] : null;
@@ -202,6 +202,51 @@ class XmlImportExportController extends Controller
                             $match = $matchName ? RouteMatch::where('name', $matchName)->where('project_id', $project->id)->first() : null;
                             $rule = $ruleName ? Rule::where('name', $ruleName)->where('project_id', $project->id)->first() : null;
 
+                            // Check for duplicate service-match combination
+                            $duplicateQuery = Route::where('routefile_id', $routeFile->id)
+                                ->where('from_service_id', $service->id);
+
+                            if ($match) {
+                                $duplicateQuery->where('match_id', $match->id);
+                            } else {
+                                $duplicateQuery->whereNull('match_id');
+                            }
+
+                            if (!$duplicateQuery->exists()) {
+                                Route::create([
+                                    'routefile_id' => $routeFile->id,
+                                    'from_service_id' => $service->id,
+                                    'match_id' => $match ? $match->id : null,
+                                    'rule_id' => $rule ? $rule->id : null,
+                                    'chainclass' => $chainclass,
+                                    'type' => null,
+                                    'priority' => $priority++,
+                                ]);
+                                $stats['routes']++;
+                            }
+                        }
+                    }
+                    // Support legacy format: <route class="X" rule="Y"/> (without <case> elements)
+                    elseif (isset($routeXml['rule'])) {
+                        $ruleName = (string)$routeXml['rule'];
+                        $matchName = isset($routeXml['cond']) ? (string)$routeXml['cond'] : null;
+                        $chainclass = isset($routeXml['chainclass']) ? (string)$routeXml['chainclass'] : null;
+
+                        // Find match and rule within the same project
+                        $match = $matchName ? RouteMatch::where('name', $matchName)->where('project_id', $project->id)->first() : null;
+                        $rule = $ruleName ? Rule::where('name', $ruleName)->where('project_id', $project->id)->first() : null;
+
+                        // Check for duplicate service-match combination
+                        $duplicateQuery = Route::where('routefile_id', $routeFile->id)
+                            ->where('from_service_id', $service->id);
+
+                        if ($match) {
+                            $duplicateQuery->where('match_id', $match->id);
+                        } else {
+                            $duplicateQuery->whereNull('match_id');
+                        }
+
+                        if (!$duplicateQuery->exists()) {
                             Route::create([
                                 'routefile_id' => $routeFile->id,
                                 'from_service_id' => $service->id,
@@ -214,17 +259,23 @@ class XmlImportExportController extends Controller
                             $stats['routes']++;
                         }
                     } else {
-                        // Default route without cases
-                        Route::create([
-                            'routefile_id' => $routeFile->id,
-                            'from_service_id' => $service->id,
-                            'match_id' => null,
-                            'rule_id' => null,
-                            'chainclass' => null,
-                            'type' => null,
-                            'priority' => $priority++,
-                        ]);
-                        $stats['routes']++;
+                        // Default route without cases or rule - check for duplicate
+                        $duplicateQuery = Route::where('routefile_id', $routeFile->id)
+                            ->where('from_service_id', $service->id)
+                            ->whereNull('match_id');
+
+                        if (!$duplicateQuery->exists()) {
+                            Route::create([
+                                'routefile_id' => $routeFile->id,
+                                'from_service_id' => $service->id,
+                                'match_id' => null,
+                                'rule_id' => null,
+                                'chainclass' => null,
+                                'type' => null,
+                                'priority' => $priority++,
+                            ]);
+                            $stats['routes']++;
+                        }
                     }
                 }
             }

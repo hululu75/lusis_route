@@ -63,15 +63,96 @@ class RouteController extends Controller
      */
     public function store(Request $request)
     {
+        // Get form values before validation to use in closure
+        $routeFileId = $request->input('routefile_id');
+        $fromServiceId = $request->input('from_service_id');
+
+        // Get the project ID from the route file
+        $routeFile = RouteFile::findOrFail($routeFileId);
+        $projectId = $routeFile->project_id;
+
         $validated = $request->validate([
             'routefile_id' => 'required|exists:route_files,id',
-            'from_service_id' => 'required|exists:services,id',
-            'match_id' => 'nullable|exists:matches,id',
-            'rule_id' => 'nullable|exists:rules,id',
+            'from_service_id' => [
+                'required',
+                'exists:services,id',
+                function ($attribute, $value, $fail) use ($projectId) {
+                    // Ensure service belongs to the same project
+                    $service = Service::find($value);
+                    if ($service && $service->project_id != $projectId) {
+                        $fail('The selected service does not belong to the same project as the route file.');
+                    }
+                },
+            ],
+            'match_id' => [
+                'nullable',
+                function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $projectId) {
+                    // Convert empty string to null for consistent checking
+                    $matchId = ($value === '' || $value === null) ? null : $value;
+
+                    if ($matchId) {
+                        // Check if match exists
+                        $match = RouteMatch::find($matchId);
+                        if (!$match) {
+                            $fail('The selected match does not exist.');
+                            return;
+                        }
+
+                        // Ensure match belongs to the same project
+                        if ($match->project_id != $projectId) {
+                            $fail('The selected match does not belong to the same project as the route file.');
+                            return;
+                        }
+
+                        // Check if this service already has a route with the same match in this route file
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
+                            ->where('match_id', $matchId)
+                            ->exists();
+
+                        if ($exists) {
+                            $fail('This service already has a route with the selected match in this route file.');
+                        }
+                    } else {
+                        // Check for duplicate null match
+                        if ($routeFileId && $fromServiceId) {
+                            $exists = Route::where('routefile_id', $routeFileId)
+                                ->where('from_service_id', $fromServiceId)
+                                ->whereNull('match_id')
+                                ->exists();
+
+                            if ($exists) {
+                                $fail('This service already has a route without match in this route file.');
+                            }
+                        }
+                    }
+                },
+            ],
+            'rule_id' => [
+                'nullable',
+                'exists:rules,id',
+                function ($attribute, $value, $fail) use ($projectId) {
+                    if ($value) {
+                        // Ensure rule belongs to the same project
+                        $rule = Rule::find($value);
+                        if ($rule && $rule->project_id != $projectId) {
+                            $fail('The selected rule does not belong to the same project as the route file.');
+                        }
+                    }
+                },
+            ],
             'chainclass' => 'nullable|string|max:128',
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'priority' => 'nullable|integer',
         ]);
+
+        // Convert empty strings to null for nullable foreign keys
+        if (isset($validated['match_id']) && $validated['match_id'] === '') {
+            $validated['match_id'] = null;
+        }
+        if (isset($validated['rule_id']) && $validated['rule_id'] === '') {
+            $validated['rule_id'] = null;
+        }
 
         $route = Route::create($validated);
 
@@ -112,17 +193,106 @@ class RouteController extends Controller
      */
     public function update(Request $request, Route $route)
     {
+        // Get form values before validation to use in closure
+        $routeFileId = $request->input('routefile_id');
+        $fromServiceId = $request->input('from_service_id');
+
+        // Get the project ID from the route file
+        $routeFile = RouteFile::findOrFail($routeFileId);
+        $projectId = $routeFile->project_id;
+
         $validated = $request->validate([
             'routefile_id' => 'required|exists:route_files,id',
-            'from_service_id' => 'required|exists:services,id',
-            'match_id' => 'nullable|exists:matches,id',
-            'rule_id' => 'nullable|exists:rules,id',
+            'from_service_id' => [
+                'required',
+                'exists:services,id',
+                function ($attribute, $value, $fail) use ($projectId) {
+                    // Ensure service belongs to the same project
+                    $service = Service::find($value);
+                    if ($service && $service->project_id != $projectId) {
+                        $fail('The selected service does not belong to the same project as the route file.');
+                    }
+                },
+            ],
+            'match_id' => [
+                'nullable',
+                function ($attribute, $value, $fail) use ($routeFileId, $fromServiceId, $route, $projectId) {
+                    // Convert empty string to null for consistent checking
+                    $matchId = ($value === '' || $value === null) ? null : $value;
+
+                    if ($matchId) {
+                        // Check if match exists
+                        $match = RouteMatch::find($matchId);
+                        if (!$match) {
+                            $fail('The selected match does not exist.');
+                            return;
+                        }
+
+                        // Ensure match belongs to the same project
+                        if ($match->project_id != $projectId) {
+                            $fail('The selected match does not belong to the same project as the route file.');
+                            return;
+                        }
+
+                        // Check if this service already has a route with the same match in this route file
+                        $exists = Route::where('routefile_id', $routeFileId)
+                            ->where('from_service_id', $fromServiceId)
+                            ->where('id', '!=', $route->id)
+                            ->where('match_id', $matchId)
+                            ->exists();
+
+                        if ($exists) {
+                            $fail('This service already has a route with the selected match in this route file.');
+                        }
+                    } else {
+                        // Check for duplicate null match
+                        if ($routeFileId && $fromServiceId) {
+                            $exists = Route::where('routefile_id', $routeFileId)
+                                ->where('from_service_id', $fromServiceId)
+                                ->where('id', '!=', $route->id)
+                                ->whereNull('match_id')
+                                ->exists();
+
+                            if ($exists) {
+                                $fail('This service already has a route without match in this route file.');
+                            }
+                        }
+                    }
+                },
+            ],
+            'rule_id' => [
+                'nullable',
+                'exists:rules,id',
+                function ($attribute, $value, $fail) use ($projectId) {
+                    if ($value) {
+                        // Ensure rule belongs to the same project
+                        $rule = Rule::find($value);
+                        if ($rule && $rule->project_id != $projectId) {
+                            $fail('The selected rule does not belong to the same project as the route file.');
+                        }
+                    }
+                },
+            ],
             'chainclass' => 'nullable|string|max:128',
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'priority' => 'nullable|integer',
         ]);
 
+        // Convert empty strings to null for nullable foreign keys
+        if (isset($validated['match_id']) && $validated['match_id'] === '') {
+            $validated['match_id'] = null;
+        }
+        if (isset($validated['rule_id']) && $validated['rule_id'] === '') {
+            $validated['rule_id'] = null;
+        }
+
         $route->update($validated);
+
+        // Check if should return to wizard
+        if ($request->input('return_to') === 'wizard' && $request->input('route_file_id')) {
+            return redirect()->route('route-files.wizard', $request->input('route_file_id'))
+                ->with('success', 'Route updated successfully!');
+        }
 
         return redirect()->route('routes.index')
             ->with('success', 'Route updated successfully!');

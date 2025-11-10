@@ -5,17 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ServiceController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Service::withCount('routes')->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $services = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('services.embed', compact('services'));
+        }
+
         return view('services.index', compact('services'));
     }
 
@@ -38,18 +45,28 @@ class ServiceController extends Controller
      */
     public function store(Request $request)
     {
+        // Get current project first
+        $projectId = ProjectHelper::getCurrentProjectId();
+
+        if (!$projectId) {
+            return redirect()->route('services.index')
+                ->with('error', 'Please select a project first');
+        }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:64|unique:services',
+            'name' => [
+                'required',
+                'string',
+                'max:64',
+                Rule::unique('services')->where(function ($query) use ($projectId) {
+                    return $query->where('project_id', $projectId);
+                }),
+            ],
             'description' => 'nullable|string',
         ]);
 
         // Auto-assign current project
-        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
-
-        if (!$validated['project_id']) {
-            return redirect()->route('services.index')
-                ->with('error', 'Please select a project first');
-        }
+        $validated['project_id'] = $projectId;
 
         Service::create($validated);
 
@@ -80,7 +97,14 @@ class ServiceController extends Controller
     public function update(Request $request, Service $service)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:64|unique:services,name,' . $service->id,
+            'name' => [
+                'required',
+                'string',
+                'max:64',
+                Rule::unique('services')->where(function ($query) use ($service) {
+                    return $query->where('project_id', $service->project_id);
+                })->ignore($service->id),
+            ],
             'description' => 'nullable|string',
         ]);
 

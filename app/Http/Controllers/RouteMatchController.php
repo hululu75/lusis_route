@@ -5,17 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\RouteMatch;
 use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RouteMatchController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = RouteMatch::withCount(['conditions', 'routes'])->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $matches = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('matches.embed', compact('matches'));
+        }
+
         return view('matches.index', compact('matches'));
     }
 
@@ -36,18 +43,27 @@ class RouteMatchController extends Controller
      */
     public function store(Request $request)
     {
+        $projectId = ProjectHelper::getCurrentProjectId();
+
+        if (!$projectId) {
+            return redirect()->route('matches.index')
+                ->with('error', 'Please select a project first');
+        }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:128|unique:matches',
+            'name' => [
+                'required',
+                'string',
+                'max:128',
+                Rule::unique('matches')->where(function ($query) use ($projectId) {
+                    return $query->where('project_id', $projectId);
+                }),
+            ],
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'description' => 'nullable|string',
         ]);
 
-        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
-
-        if (!$validated['project_id']) {
-            return redirect()->route('matches.index')
-                ->with('error', 'Please select a project first');
-        }
+        $validated['project_id'] = $projectId;
 
         RouteMatch::create($validated);
 
@@ -78,7 +94,14 @@ class RouteMatchController extends Controller
     public function update(Request $request, RouteMatch $match)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:128|unique:matches,name,' . $match->id,
+            'name' => [
+                'required',
+                'string',
+                'max:128',
+                Rule::unique('matches')->where(function ($query) use ($match) {
+                    return $query->where('project_id', $match->project_id);
+                })->ignore($match->id),
+            ],
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
             'description' => 'nullable|string',
         ]);

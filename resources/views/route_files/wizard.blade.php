@@ -227,7 +227,7 @@
                             <input type="hidden" name="routefile_id" value="{{ $routeFile->id }}">
 
                             <div class="row">
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="from_service_id" class="form-label">
                                         From Service <span class="text-danger">*</span>
                                     </label>
@@ -245,7 +245,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="match_id" class="form-label">
                                         Match Condition
                                     </label>
@@ -265,7 +265,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="rule_id" class="form-label">
                                         Rule
                                     </label>
@@ -283,23 +283,8 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="priority" class="form-label">Priority</label>
-                                    <input type="number"
-                                           class="form-control @error('priority') is-invalid @enderror"
-                                           id="priority"
-                                           name="priority"
-                                           value="{{ old('priority', $stats['routes'] + 1) }}"
-                                           placeholder="e.g., 1">
-                                    @error('priority')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="chainclass" class="form-label">Chain Class</label>
                                     <input type="text"
                                            class="form-control @error('chainclass') is-invalid @enderror"
@@ -323,73 +308,105 @@
                 </div>
                 @endif
 
-                <!-- Existing Routes List -->
+                <!-- Existing Routes List with Service Tabs -->
                 @if($routeFile->routes->count() > 0)
                 <div class="card">
                     <div class="card-header bg-white">
-                        <h6 class="mb-0"><i class="bi bi-list"></i> Routes in this file ({{ $routeFile->routes->count() }})</h6>
+                        <h6 class="mb-0"><i class="bi bi-list"></i> Manage Routes ({{ $routeFile->routes->count() }})</h6>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Priority</th>
-                                        <th>From Service</th>
-                                        <th>Match</th>
-                                        <th>Rule</th>
-                                        <th>Type</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($routeFile->routes as $route)
-                                    <tr>
-                                        <td><span class="badge bg-secondary">{{ $route->priority }}</span></td>
-                                        <td>
-                                            @if($route->service)
-                                                <i class="bi bi-gear"></i> {{ $route->service->name }}
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($route->match)
-                                                <i class="bi bi-filter"></i> {{ $route->match->name }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($route->rule)
-                                                <i class="bi bi-card-checklist"></i> {{ $route->rule->name }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($route->type)
-                                                <span class="badge bg-info">{{ $route->type }}</span>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('routes.show', $route->id) }}"
-                                               class="btn btn-sm btn-outline-primary"
-                                               title="View">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route('routes.edit', $route->id) }}"
-                                               class="btn btn-sm btn-outline-warning"
-                                               title="Edit">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
+                    <div class="card-body">
+                        @php
+                            $routesByService = $routeFile->routes->groupBy('from_service_id');
+                        @endphp
+
+                        <div class="row">
+                            <!-- Vertical Tab Navigation -->
+                            <div class="col-md-3">
+                                <ul class="nav nav-pills flex-column" id="wizardServiceTabs" role="tablist">
+                                    @foreach($routesByService as $serviceId => $routes)
+                                        @php
+                                            $service = $routes->first()->service;
+                                            $isFirst = $loop->first;
+                                        @endphp
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link {{ $isFirst ? 'active' : '' }} w-100 text-start"
+                                                    id="wizard-service-{{ $serviceId }}-tab"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#wizard-service-{{ $serviceId }}"
+                                                    type="button"
+                                                    role="tab"
+                                                    aria-controls="wizard-service-{{ $serviceId }}"
+                                                    aria-selected="{{ $isFirst ? 'true' : 'false' }}">
+                                                <i class="bi bi-gear"></i> {{ $service->name ?? 'Unknown' }}
+                                                <span class="badge bg-secondary float-end">{{ $routes->count() }}</span>
+                                            </button>
+                                        </li>
                                     @endforeach
-                                </tbody>
-                            </table>
+                                </ul>
+                            </div>
+
+                            <!-- Tab Content -->
+                            <div class="col-md-9">
+                                <div class="tab-content" id="wizardServiceTabsContent">
+                                    @foreach($routesByService as $serviceId => $routes)
+                                        @php
+                                            $service = $routes->first()->service;
+                                            $isFirst = $loop->first;
+                                        @endphp
+                                        <div class="tab-pane fade {{ $isFirst ? 'show active' : '' }}"
+                                             id="wizard-service-{{ $serviceId }}"
+                                             role="tabpanel"
+                                             aria-labelledby="wizard-service-{{ $serviceId }}-tab">
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle"></i> Drag rows by the <i class="bi bi-grip-vertical"></i> handle to reorder priorities
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th width="50"><i class="bi bi-grip-vertical"></i></th>
+                                                            <th>Match</th>
+                                                            <th>Rule</th>
+                                                            <th>Chain Class</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
+                                                        @foreach($routes->sortBy('priority') as $route)
+                                                        <tr class="sortable-row" data-route-id="{{ $route->id }}">
+                                                            <td class="text-center drag-handle">
+                                                                <i class="bi bi-grip-vertical text-muted"></i>
+                                                            </td>
+                                                            <td>{{ $route->match->name ?? '-' }}</td>
+                                                            <td>{{ $route->rule->name ?? '-' }}</td>
+                                                            <td>
+                                                                @if($route->chainclass)
+                                                                    <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                <a href="{{ route('routes.show', $route->id) }}"
+                                                                   class="btn btn-sm btn-outline-primary"
+                                                                   title="View Route">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </a>
+                                                                <a href="{{ route('routes.edit', ['route' => $route->id, 'return_to' => 'wizard', 'route_file_id' => $routeFile->id]) }}"
+                                                                   class="btn btn-sm btn-outline-warning"
+                                                                   title="Edit Route">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -505,7 +522,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('services.index') }}" style="width:100%; height:600px; border:none;" id="viewServicesFrame"></iframe>
+                <iframe src="{{ route('services.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewServicesFrame"></iframe>
             </div>
         </div>
     </div>
@@ -535,7 +552,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('matches.index') }}" style="width:100%; height:600px; border:none;" id="viewMatchesFrame"></iframe>
+                <iframe src="{{ route('matches.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewMatchesFrame"></iframe>
             </div>
         </div>
     </div>
@@ -565,7 +582,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('deltas.index') }}" style="width:100%; height:600px; border:none;" id="viewDeltasFrame"></iframe>
+                <iframe src="{{ route('deltas.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewDeltasFrame"></iframe>
             </div>
         </div>
     </div>
@@ -595,7 +612,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <iframe src="{{ route('rules.index') }}" style="width:100%; height:600px; border:none;" id="viewRulesFrame"></iframe>
+                <iframe src="{{ route('rules.index', ['embed' => 1]) }}" style="width:100%; height:600px; border:none;" id="viewRulesFrame"></iframe>
             </div>
         </div>
     </div>
@@ -624,6 +641,50 @@
 .modal-body iframe {
     border-radius: 0.375rem;
 }
+
+/* Drag and drop styles */
+.drag-handle {
+    cursor: grab !important;
+}
+.drag-handle:active {
+    cursor: grabbing !important;
+}
+.sortable-row .bi-grip-vertical {
+    cursor: grab !important;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+}
+.sortable-row:hover .bi-grip-vertical {
+    color: #0d6efd !important;
+}
+.sortable-row .bi-grip-vertical:active {
+    cursor: grabbing !important;
+}
+.sortable-row {
+    transition: background-color 0.2s;
+}
+.sortable-row:hover {
+    background-color: #f8f9fa;
+}
+.sortable-ghost {
+    opacity: 0.5;
+    background: #e3f2fd !important;
+}
+.sortable-chosen {
+    background: #e7f3ff !important;
+}
+/* Vertical nav pills styling */
+.nav-pills .nav-link {
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+.nav-pills .nav-link:hover {
+    background-color: #e9ecef;
+}
+.nav-pills .nav-link.active {
+    font-weight: 600;
+}
 </style>
 @endpush
 
@@ -651,6 +712,75 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reload iframe to get fresh content
                 iframe.src = iframe.src;
             }
+        });
+    });
+
+    // Initialize drag and drop sorting for route tables
+    const sortableTables = document.querySelectorAll('.sortable-routes');
+    console.log('Found ' + sortableTables.length + ' sortable route tables');
+
+    sortableTables.forEach(function(tbody, index) {
+        console.log('Initializing sortable ' + index + ' for service: ' + tbody.dataset.serviceId);
+
+        const sortable = Sortable.create(tbody, {
+            animation: 150,
+            handle: '.bi-grip-vertical',
+            ghostClass: 'sortable-ghost',
+            forceFallback: false,
+            onStart: function(evt) {
+                console.log('Drag started');
+            },
+            onEnd: function(evt) {
+                console.log('Drag ended, updating priorities...');
+
+                // Get all rows in this service group
+                const rows = tbody.querySelectorAll('.sortable-row');
+                const routeIds = [];
+
+                // Collect route IDs in new order
+                rows.forEach((row, index) => {
+                    routeIds.push(row.dataset.routeId);
+                });
+
+                console.log('New order:', routeIds);
+
+                // Send AJAX request to update priorities
+                fetch('{{ route("routes.reorder") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ ids: routeIds })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Routes reordered successfully');
+                        // Show a subtle success indicator
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+                        alert.style.zIndex = '9999';
+                        alert.innerHTML = '<i class="bi bi-check-circle"></i> Order saved successfully! <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                        document.body.appendChild(alert);
+                        setTimeout(() => alert.remove(), 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error reordering routes:', error);
+                    alert('Failed to save new order. Please refresh the page.');
+                });
+            }
+        });
+    });
+
+    // Log tab initialization
+    const tabs = document.querySelectorAll('#wizardServiceTabs button[data-bs-toggle="tab"]');
+    console.log('Found ' + tabs.length + ' service tabs');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            console.log('Tab switched to: ' + event.target.textContent);
         });
     });
 });

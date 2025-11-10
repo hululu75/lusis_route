@@ -88,6 +88,24 @@
             </div>
         </div>
 
+        <!-- XML Preview Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="bi bi-code-square"></i> XML Preview</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyXmlToClipboard()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <a href="{{ route('xml.export') }}?route_file_id={{ $routeFile->id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-download"></i> Download XML
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <pre class="mb-0" style="max-height: 500px; overflow-y: auto; background-color: #2d2d2d; color: #f8f8f2; padding: 1rem; border-radius: 0 0 0.375rem 0.375rem;"><code id="xml-content" class="language-xml">{{ $xmlPreview }}</code></pre>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0"><i class="bi bi-signpost-split"></i> Routes in This File</h5>
@@ -99,60 +117,87 @@
                         $routesByService = $routeFile->routes->groupBy('from_service_id');
                     @endphp
 
-                    @foreach($routesByService as $serviceId => $routes)
-                        @php
-                            $service = $routes->first()->service;
-                        @endphp
+                    <div class="row">
+                        <!-- Vertical Tab Navigation -->
+                        <div class="col-md-3">
+                            <ul class="nav nav-pills flex-column" id="serviceTabs" role="tablist">
+                                @foreach($routesByService as $serviceId => $routes)
+                                    @php
+                                        $service = $routes->first()->service;
+                                        $isFirst = $loop->first;
+                                    @endphp
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link {{ $isFirst ? 'active' : '' }} w-100 text-start"
+                                                id="service-{{ $serviceId }}-tab"
+                                                data-bs-toggle="tab"
+                                                data-bs-target="#service-{{ $serviceId }}"
+                                                type="button"
+                                                role="tab"
+                                                aria-controls="service-{{ $serviceId }}"
+                                                aria-selected="{{ $isFirst ? 'true' : 'false' }}">
+                                            <i class="bi bi-gear"></i> {{ $service->name ?? 'Unknown' }}
+                                            <span class="badge bg-secondary float-end">{{ $routes->count() }}</span>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
 
-                        <div class="mb-4">
-                            <h6 class="text-primary mb-3">
-                                <i class="bi bi-gear"></i>
-                                From Service: <strong>{{ $service->name ?? 'Unknown' }}</strong>
-                                <span class="badge bg-secondary ms-2">{{ $routes->count() }} routes</span>
-                            </h6>
-
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th width="50"><i class="bi bi-grip-vertical"></i></th>
-                                            <th>Priority</th>
-                                            <th>Match</th>
-                                            <th>Rule</th>
-                                            <th>Chain Class</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
-                                        @foreach($routes->sortBy('priority') as $route)
-                                        <tr class="sortable-row" data-route-id="{{ $route->id }}">
-                                            <td class="text-center">
-                                                <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
-                                            </td>
-                                            <td><span class="badge bg-secondary priority-badge">{{ $route->priority }}</span></td>
-                                            <td>{{ $route->match->name ?? '-' }}</td>
-                                            <td>{{ $route->rule->name ?? '-' }}</td>
-                                            <td>
-                                                @if($route->chainclass)
-                                                    <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('routes.show', $route->id) }}"
-                                                   class="btn btn-sm btn-outline-primary"
-                                                   title="View Route">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                        <!-- Tab Content -->
+                        <div class="col-md-9">
+                            <div class="tab-content" id="serviceTabsContent">
+                                @foreach($routesByService as $serviceId => $routes)
+                                    @php
+                                        $service = $routes->first()->service;
+                                        $isFirst = $loop->first;
+                                    @endphp
+                                    <div class="tab-pane fade {{ $isFirst ? 'show active' : '' }}"
+                                         id="service-{{ $serviceId }}"
+                                         role="tabpanel"
+                                         aria-labelledby="service-{{ $serviceId }}-tab">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="50"><i class="bi bi-grip-vertical"></i></th>
+                                                        <th>Match</th>
+                                                        <th>Rule</th>
+                                                        <th>Chain Class</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="sortable-routes" data-service-id="{{ $serviceId }}">
+                                                    @foreach($routes->sortBy('priority') as $route)
+                                                    <tr class="sortable-row" data-route-id="{{ $route->id }}">
+                                                        <td class="text-center drag-handle">
+                                                            <i class="bi bi-grip-vertical text-muted"></i>
+                                                        </td>
+                                                        <td>{{ $route->match->name ?? '-' }}</td>
+                                                        <td>{{ $route->rule->name ?? '-' }}</td>
+                                                        <td>
+                                                            @if($route->chainclass)
+                                                                <code class="small">{{ Str::limit($route->chainclass, 20) }}</code>
+                                                            @else
+                                                                -
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{ route('routes.show', $route->id) }}"
+                                                               class="btn btn-sm btn-outline-primary"
+                                                               title="View Route">
+                                                                <i class="bi bi-eye"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
-                    @endforeach
+                    </div>
                 @else
                     <div class="text-center py-4">
                         <i class="bi bi-signpost-split fs-2 text-muted d-block mb-2"></i>
@@ -189,6 +234,54 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Improve drag handle visibility */
+    .drag-handle {
+        cursor: grab !important;
+    }
+    .drag-handle:active {
+        cursor: grabbing !important;
+    }
+    .sortable-row .bi-grip-vertical {
+        cursor: grab !important;
+        font-size: 1.2rem;
+        transition: color 0.2s;
+    }
+    .sortable-row:hover .bi-grip-vertical {
+        color: #0d6efd !important;
+    }
+    .sortable-row .bi-grip-vertical:active {
+        cursor: grabbing !important;
+    }
+    .sortable-row {
+        transition: background-color 0.2s;
+    }
+    .sortable-row:hover {
+        background-color: #f8f9fa;
+    }
+    .sortable-ghost {
+        opacity: 0.5;
+        background: #e3f2fd !important;
+    }
+    .sortable-chosen {
+        background: #e7f3ff !important;
+    }
+    /* Vertical nav pills styling */
+    .nav-pills .nav-link {
+        margin-bottom: 0.5rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: #e9ecef;
+    }
+    .nav-pills .nav-link.active {
+        font-weight: 600;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 function confirmDelete() {
@@ -197,16 +290,47 @@ function confirmDelete() {
     }
 }
 
+function copyXmlToClipboard() {
+    const xmlContent = document.getElementById('xml-content').textContent;
+    navigator.clipboard.writeText(xmlContent).then(function() {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(function(error) {
+        alert('Failed to copy XML to clipboard');
+    });
+}
+
 // Initialize drag and drop sorting for each service group
 document.addEventListener('DOMContentLoaded', function() {
-    const sortableTables = document.querySelectorAll('.sortable-routes');
+    console.log('Initializing sortable tables...');
 
-    sortableTables.forEach(function(tbody) {
+    // Initialize sortable for all service groups
+    const sortableTables = document.querySelectorAll('.sortable-routes');
+    console.log('Found ' + sortableTables.length + ' sortable tables');
+
+    sortableTables.forEach(function(tbody, index) {
+        console.log('Initializing sortable ' + index + ' for service: ' + tbody.dataset.serviceId);
+
         const sortable = Sortable.create(tbody, {
             animation: 150,
             handle: '.bi-grip-vertical',
             ghostClass: 'sortable-ghost',
+            forceFallback: false,
+            onStart: function(evt) {
+                console.log('Drag started');
+            },
             onEnd: function(evt) {
+                console.log('Drag ended, updating priorities...');
+
                 // Get all rows in this service group
                 const rows = tbody.querySelectorAll('.sortable-row');
                 const routeIds = [];
@@ -214,12 +338,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Collect route IDs in new order
                 rows.forEach((row, index) => {
                     routeIds.push(row.dataset.routeId);
-                    // Update priority badge display
-                    const badge = row.querySelector('.priority-badge');
-                    if (badge) {
-                        badge.textContent = index;
-                    }
                 });
+
+                console.log('New order:', routeIds);
 
                 // Send AJAX request to update priorities
                 fetch('{{ route("routes.reorder") }}', {
@@ -241,6 +362,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Failed to save new order. Please refresh the page.');
                 });
             }
+        });
+    });
+
+    // Log tab initialization
+    const tabs = document.querySelectorAll('#serviceTabs button[data-bs-toggle="tab"]');
+    console.log('Found ' + tabs.length + ' tabs');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            console.log('Tab switched to: ' + event.target.textContent);
         });
     });
 });

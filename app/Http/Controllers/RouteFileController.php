@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\RouteFile;
 use App\Models\Project;
+use App\Models\RouteMatch;
+use App\Models\Rule;
+use App\Models\Delta;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
 class RouteFileController extends Controller
@@ -13,7 +17,9 @@ class RouteFileController extends Controller
      */
     public function index()
     {
-        $routeFiles = RouteFile::with('project')->withCount('routes')->latest()->get();
+        $query = RouteFile::with('project')->withCount('routes')->latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $routeFiles = $query->get();
         return view('route_files.index', compact('routeFiles'));
     }
 
@@ -51,8 +57,201 @@ class RouteFileController extends Controller
      */
     public function show(RouteFile $routeFile)
     {
-        $routeFile->load(['project', 'routes']);
-        return view('route_files.show', compact('routeFile'));
+        $routeFile->load(['project', 'routes.service', 'routes.match.conditions', 'routes.rule.delta']);
+
+        // Generate XML preview
+        $xmlPreview = $this->generateXmlPreview($routeFile);
+
+        return view('route_files.show', compact('routeFile', 'xmlPreview'));
+    }
+
+    /**
+     * Generate aligned XML preview for route file
+     */
+    private function generateXmlPreview(RouteFile $routeFile)
+    {
+        $xml = [];
+        $xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml[] = '<routing>';
+
+        // Group routes by service
+        $routesByService = $routeFile->routes->groupBy('from_service_id');
+
+        // Get all matches, rules, deltas from the same project
+        $projectId = $routeFile->project_id;
+        $matches = RouteMatch::with('conditions')
+            ->where('project_id', $projectId)
+            ->get();
+        $rules = Rule::with('delta')
+            ->where('project_id', $projectId)
+            ->get();
+        $deltas = Delta::where('project_id', $projectId)
+            ->get();
+
+        // Export Routes with aligned cases
+        if ($routesByService->count() > 0) {
+            $xml[] = '  <routes>';
+
+            foreach ($routesByService as $serviceId => $routes) {
+                $service = $routes->first()->service;
+                if (!$service) continue;
+
+                $xml[] = '    <route class="' . htmlspecialchars($service->name) . '">';
+
+                // Calculate max widths for case attributes
+                $maxCond = 0;
+                $maxRule = 0;
+                foreach ($routes as $route) {
+                    if ($route->match) $maxCond = max($maxCond, strlen($route->match->name));
+                    if ($route->rule) $maxRule = max($maxRule, strlen($route->rule->name));
+                }
+
+                // Output aligned cases
+                foreach ($routes->sortBy('priority') as $route) {
+                    $attrs = [];
+                    if ($route->match) {
+                        $condValue = htmlspecialchars($route->match->name);
+                        $attrs[] = 'cond="' . str_pad($condValue . '"', $maxCond + 1);
+                    }
+                    if ($route->rule) {
+                        $ruleValue = htmlspecialchars($route->rule->name);
+                        $attrs[] = 'rule="' . str_pad($ruleValue . '"', $maxRule + 1);
+                    }
+                    if ($route->chainclass) {
+                        $attrs[] = 'chainclass="' . htmlspecialchars($route->chainclass) . '"';
+                    }
+
+                    if (count($attrs) > 0) {
+                        $xml[] = '      <case ' . implode(' ', $attrs) . '/>';
+                    } else {
+                        $xml[] = '      <case/>';
+                    }
+                }
+
+                $xml[] = '    </route>';
+            }
+
+            $xml[] = '  </routes>';
+        }
+
+        // Export Matches with aligned attributes
+        if ($matches->count() > 0) {
+            $xml[] = '  <matches>';
+
+            // Calculate max widths
+            $maxName = 0;
+            foreach ($matches as $match) {
+                $maxName = max($maxName, strlen($match->name));
+            }
+
+            foreach ($matches as $match) {
+                $nameValue = htmlspecialchars($match->name);
+                $namePart = 'name="' . str_pad($nameValue . '"', $maxName + 1);
+
+                if ($match->conditions->count() > 0) {
+                    if ($match->type) {
+                        $xml[] = '    <match ' . $namePart . ' type="' . htmlspecialchars($match->type) . '">';
+                    } else {
+                        $xml[] = '    <match ' . $namePart . '>';
+                    }
+
+                    // Calculate max widths for conditions
+                    $maxField = 0;
+                    $maxOp = 0;
+                    foreach ($match->conditions as $cond) {
+                        $maxField = max($maxField, strlen($cond->field));
+                        $maxOp = max($maxOp, strlen($cond->operator));
+                    }
+
+                    foreach ($match->conditions as $condition) {
+                        $fieldValue = htmlspecialchars($condition->field);
+                        $opValue = htmlspecialchars($condition->operator);
+
+                        $fieldPart = 'field="' . str_pad($fieldValue . '"', $maxField + 1);
+                        $opPart = 'operator="' . str_pad($opValue . '"', $maxOp + 1);
+
+                        if ($condition->value) {
+                            $xml[] = '      <condition ' . $fieldPart . ' ' . $opPart . ' value="' . htmlspecialchars($condition->value) . '"/>';
+                        } else {
+                            $xml[] = '      <condition ' . $fieldPart . ' ' . $opPart . '/>';
+                        }
+                    }
+
+                    $xml[] = '    </match>';
+                } else {
+                    if ($match->type) {
+                        $xml[] = '    <match ' . $namePart . ' type="' . htmlspecialchars($match->type) . '"/>';
+                    } else {
+                        $xml[] = '    <match ' . $namePart . '/>';
+                    }
+                }
+            }
+
+            $xml[] = '  </matches>';
+        }
+
+        // Export Rules with aligned attributes
+        if ($rules->count() > 0) {
+            $xml[] = '  <rules>';
+
+            // Calculate max widths
+            $maxName = 0;
+            $maxClass = 0;
+            foreach ($rules as $rule) {
+                $maxName = max($maxName, strlen($rule->name));
+                $maxClass = max($maxClass, strlen($rule->class));
+            }
+
+            foreach ($rules as $rule) {
+                $nameValue = htmlspecialchars($rule->name);
+                $classValue = htmlspecialchars($rule->class);
+
+                $namePart = 'name="' . str_pad($nameValue . '"', $maxName + 1);
+                $classPart = 'class="' . str_pad($classValue . '"', $maxClass + 1);
+                $typePart = 'type="' . htmlspecialchars($rule->type) . '"';
+
+                $attrs = [$namePart, $classPart, $typePart];
+
+                if ($rule->delta) {
+                    $attrs[] = 'delta="' . htmlspecialchars($rule->delta->name) . '"';
+                }
+                if ($rule->on_failure) {
+                    $attrs[] = 'on_failure="' . htmlspecialchars($rule->on_failure) . '"';
+                }
+
+                $xml[] = '    <rule ' . implode(' ', $attrs) . '/>';
+            }
+
+            $xml[] = '  </rules>';
+        }
+
+        // Export Deltas with aligned attributes
+        if ($deltas->count() > 0) {
+            $xml[] = '  <deltas>';
+
+            // Calculate max width
+            $maxName = 0;
+            foreach ($deltas as $delta) {
+                $maxName = max($maxName, strlen($delta->name));
+            }
+
+            foreach ($deltas as $delta) {
+                $nameValue = htmlspecialchars($delta->name);
+                $namePart = 'name="' . str_pad($nameValue . '"', $maxName + 1);
+
+                if ($delta->next) {
+                    $xml[] = '    <delta ' . $namePart . ' next="' . htmlspecialchars($delta->next) . '"/>';
+                } else {
+                    $xml[] = '    <delta ' . $namePart . '/>';
+                }
+            }
+
+            $xml[] = '  </deltas>';
+        }
+
+        $xml[] = '</routing>';
+
+        return implode("\n", $xml);
     }
 
     /**
@@ -78,7 +277,7 @@ class RouteFileController extends Controller
 
         $routeFile->update($validated);
 
-        return redirect()->route('route_files.index')
+        return redirect()->route('route-files.index')
             ->with('success', 'Route file updated successfully!');
     }
 

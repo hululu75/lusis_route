@@ -210,3 +210,56 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('type');
+    const nameInput = document.getElementById('name');
+
+    // Prefix mapping based on type
+    const prefixMap = {
+        'REQ': 'R_',
+        'NOT': 'N_',
+        'SAME': 'S_',
+        'PUB': 'P_',
+        'END': 'E_'
+    };
+
+    // Function to update name with prefix
+    function updateNamePrefix() {
+        const selectedType = typeSelect.value;
+        const currentName = nameInput.value;
+
+        if (!selectedType) return;
+
+        const newPrefix = prefixMap[selectedType];
+        if (!newPrefix) return;
+
+        // Remove old prefix if exists
+        let nameWithoutPrefix = currentName;
+        Object.values(prefixMap).forEach(prefix => {
+            if (currentName.startsWith(prefix)) {
+                nameWithoutPrefix = currentName.substring(prefix.length);
+            }
+        });
+
+        // Add new prefix
+        nameInput.value = newPrefix + nameWithoutPrefix;
+    }
+
+    // Listen to type changes
+    typeSelect.addEventListener('change', updateNamePrefix);
+
+    // If name is empty when type changes, just add the prefix
+    typeSelect.addEventListener('change', function() {
+        if (nameInput.value.trim() === '') {
+            const selectedType = typeSelect.value;
+            if (selectedType && prefixMap[selectedType]) {
+                nameInput.value = prefixMap[selectedType];
+            }
+        }
+    });
+});
+</script>
+@endpush

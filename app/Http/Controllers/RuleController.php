@@ -6,17 +6,24 @@ use App\Models\Rule;
 use App\Helpers\ProjectHelper;
 use App\Models\Delta;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule as ValidationRule;
 
 class RuleController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Rule::with('delta')->withCount('routes')->latest();
         ProjectHelper::scopeToCurrentProject($query);
         $rules = $query->get();
+
+        // Return embed view for iframe display
+        if ($request->get('embed')) {
+            return view('rules.embed', compact('rules'));
+        }
+
         return view('rules.index', compact('rules'));
     }
 
@@ -41,8 +48,22 @@ class RuleController extends Controller
      */
     public function store(Request $request)
     {
+        $projectId = ProjectHelper::getCurrentProjectId();
+
+        if (!$projectId) {
+            return redirect()->route('rules.index')
+                ->with('error', 'Please select a project first');
+        }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:128|unique:rules',
+            'name' => [
+                'required',
+                'string',
+                'max:128',
+                ValidationRule::unique('rules')->where(function ($query) use ($projectId) {
+                    return $query->where('project_id', $projectId);
+                }),
+            ],
             'class' => 'required|string|max:64',
             'type' => 'required|in:REQ,NOT,SAME,PUB,END',
             'delta_id' => 'nullable|exists:deltas,id',
@@ -56,12 +77,7 @@ class RuleController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $validated['project_id'] = ProjectHelper::getCurrentProjectId();
-
-        if (!$validated['project_id']) {
-            return redirect()->route('rules.index')
-                ->with('error', 'Please select a project first');
-        }
+        $validated['project_id'] = $projectId;
 
         Rule::create($validated);
 
@@ -83,7 +99,9 @@ class RuleController extends Controller
      */
     public function edit(Rule $rule)
     {
-        $deltas = Delta::latest()->get();
+        $query = Delta::latest();
+        ProjectHelper::scopeToCurrentProject($query);
+        $deltas = $query->get();
         return view('rules.edit', compact('rule', 'deltas'));
     }
 
@@ -93,7 +111,14 @@ class RuleController extends Controller
     public function update(Request $request, Rule $rule)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:128|unique:rules,name,' . $rule->id,
+            'name' => [
+                'required',
+                'string',
+                'max:128',
+                ValidationRule::unique('rules')->where(function ($query) use ($rule) {
+                    return $query->where('project_id', $rule->project_id);
+                })->ignore($rule->id),
+            ],
             'class' => 'required|string|max:64',
             'type' => 'required|in:REQ,NOT,SAME,PUB,END',
             'delta_id' => 'nullable|exists:deltas,id',

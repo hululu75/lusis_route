@@ -24,7 +24,6 @@
                         <thead>
                             <tr>
                                 <th width="50"></th>
-                                <th>Priority</th>
                                 <th>Route File</th>
                                 <th>Service</th>
                                 <th>Match</th>
@@ -39,9 +38,6 @@
                             <tr class="draggable-item" data-id="{{ $route->id }}">
                                 <td class="text-center">
                                     <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ $route->priority }}</span>
                                 </td>
                                 <td>
                                     @if($route->routeFile)
@@ -167,14 +163,6 @@ const sortable = Sortable.create(tbody, {
                 id: item.dataset.id,
                 priority: index + 1
             });
-        });
-
-        // Update priority badges
-        items.forEach((item, index) => {
-            const badge = item.querySelector('.badge.bg-secondary');
-            if (badge) {
-                badge.textContent = index + 1;
-            }
         });
 
         // Send AJAX request to update order
