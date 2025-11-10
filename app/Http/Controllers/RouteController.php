@@ -66,7 +66,30 @@ class RouteController extends Controller
         $validated = $request->validate([
             'routefile_id' => 'required|exists:route_files,id',
             'from_service_id' => 'required|exists:services,id',
-            'match_id' => 'nullable|exists:matches,id',
+            'match_id' => [
+                'nullable',
+                'exists:matches,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    // Check if this service already has a route with the same match in this route file
+                    // This includes checking for null matches
+                    $query = Route::where('routefile_id', $request->routefile_id)
+                        ->where('from_service_id', $request->from_service_id);
+
+                    if ($value) {
+                        $query->where('match_id', $value);
+                    } else {
+                        $query->whereNull('match_id');
+                    }
+
+                    if ($query->exists()) {
+                        if ($value) {
+                            $fail('This service already has a route with the selected match in this route file.');
+                        } else {
+                            $fail('This service already has a route without match in this route file.');
+                        }
+                    }
+                },
+            ],
             'rule_id' => 'nullable|exists:rules,id',
             'chainclass' => 'nullable|string|max:128',
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
@@ -115,7 +138,31 @@ class RouteController extends Controller
         $validated = $request->validate([
             'routefile_id' => 'required|exists:route_files,id',
             'from_service_id' => 'required|exists:services,id',
-            'match_id' => 'nullable|exists:matches,id',
+            'match_id' => [
+                'nullable',
+                'exists:matches,id',
+                function ($attribute, $value, $fail) use ($request, $route) {
+                    // Check if this service already has a route with the same match in this route file
+                    // This includes checking for null matches, but excludes the current route
+                    $query = Route::where('routefile_id', $request->routefile_id)
+                        ->where('from_service_id', $request->from_service_id)
+                        ->where('id', '!=', $route->id);
+
+                    if ($value) {
+                        $query->where('match_id', $value);
+                    } else {
+                        $query->whereNull('match_id');
+                    }
+
+                    if ($query->exists()) {
+                        if ($value) {
+                            $fail('This service already has a route with the selected match in this route file.');
+                        } else {
+                            $fail('This service already has a route without match in this route file.');
+                        }
+                    }
+                },
+            ],
             'rule_id' => 'nullable|exists:rules,id',
             'chainclass' => 'nullable|string|max:128',
             'type' => 'nullable|in:REQ,NOT,SAME,PUB,END',
