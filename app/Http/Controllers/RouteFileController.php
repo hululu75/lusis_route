@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\RouteFile;
 use App\Models\Project;
+use App\Models\RouteMatch;
+use App\Models\Rule;
+use App\Models\Delta;
 use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 
@@ -74,20 +77,16 @@ class RouteFileController extends Controller
         // Group routes by service
         $routesByService = $routeFile->routes->groupBy('from_service_id');
 
-        // Collect unique matches, rules, deltas
-        $matches = collect();
-        $rules = collect();
-        $deltas = collect();
-
-        foreach ($routeFile->routes as $route) {
-            if ($route->match) $matches->push($route->match);
-            if ($route->rule) $rules->push($route->rule);
-            if ($route->rule && $route->rule->delta) $deltas->push($route->rule->delta);
-        }
-
-        $matches = $matches->unique('id');
-        $rules = $rules->unique('id');
-        $deltas = $deltas->unique('id');
+        // Get all matches, rules, deltas from the same project
+        $projectId = $routeFile->project_id;
+        $matches = RouteMatch::with('conditions')
+            ->where('project_id', $projectId)
+            ->get();
+        $rules = Rule::with('delta')
+            ->where('project_id', $projectId)
+            ->get();
+        $deltas = Delta::where('project_id', $projectId)
+            ->get();
 
         // Export Routes with aligned cases
         if ($routesByService->count() > 0) {
